@@ -3,16 +3,19 @@ const Article = require('../models/Article');
 exports.getArticleById = async (req, res) => {
     try {
         const article = await Article.findById(req.params.id).populate('author', 'username');
-        
-        if (!article || article.status !== 'פורסמה') {
-            // Note: Editors and reporters might need to see drafts, but for public SEO SSR we only show published.
-            // A small check can be added here if the user is logged in as editor/author to view it anyway.
-            if (!req.session.user || (req.session.user.role === 'guest')) {
-                 if(!article || article.status !== 'פורסמה') return res.status(404).send('Article not found or not published');
-            }
+
+        if (!article) {
+            return res.status(404).send('Article not found');
         }
 
-        // Increment view count (Student 4 might change this logic later for analytics)
+        // Public users can only see published articles.
+        // Reporters and editors can preview any status for review purposes.
+        const isStaff = req.session.user && req.session.user.role !== 'guest';
+        if (article.status !== 'published' && !isStaff) {
+            return res.status(404).send('Article not found or not published');
+        }
+
+        // Increment view count (Student 4 may extend this for detailed analytics)
         article.viewsCount += 1;
         await article.save();
 
