@@ -80,7 +80,7 @@ const seed = async () => {
         },
         {
             title: 'Investigating Water Quality Reports',
-            content: '',
+            content: 'Draft - pending editor approval.',
             draftTitle: 'Water Quality Issues in the Northern District',
             draftContent: '<p>Initial draft content covering the water quality reports...</p>',
             author: reporter1._id,

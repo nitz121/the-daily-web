@@ -4,91 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= article.title %> - The Daily Web</title>
-    <meta name="description" content="<%= article.content.substring(0, 150) %>...">
-    <!-- Full SSR render for SEO - no client-side rendering needed for main content -->
-    <style>
-        body { font-family: Georgia, serif; line-height: 1.7; max-width: 820px; margin: 0 auto; padding: 20px; color: #222; }
-        nav { font-family: Arial, sans-serif; margin-bottom: 24px; font-size: 0.9em; }
-        nav a { margin-right: 12px; color: #007bff; text-decoration: none; }
-        nav a:hover { text-decoration: underline; }
-        .article-header { border-bottom: 1px solid #ddd; padding-bottom: 12px; margin-bottom: 20px; }
-        .article-header h1 { font-size: 2em; margin-bottom: 8px; }
-        .article-meta { color: #666; font-size: 0.9em; }
-        .article-meta span { margin-right: 12px; }
-        .article-content { font-size: 1.1em; }
-        .article-image { max-width: 100%; height: auto; margin-bottom: 20px; border-radius: 6px; }
-        .comments-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        .draft-notice { background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-family: Arial, sans-serif; font-size: 0.9em; }
-        .editor-note { background: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-family: Arial, sans-serif; }
-    </style>
+    <!-- Use substring carefully since content might contain HTML tags. For safety in meta tags, Student 4 should probably strip HTML. -->
+    <meta name="description" content="News article from The Daily Web">
+    
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-    <nav>
-        <a href="/">Home</a>
-        <% if (user) { %>
-            <span>Hello, <strong><%= user.username %></strong> (<%= user.role %>)</span>
-            <a href="/auth/logout">Logout</a>
-        <% } else { %>
-            <a href="/auth/login">Staff Login</a>
-        <% } %>
-    </nav>
+    <!-- Shared Header -->
+    <header class="site-header">
+        <nav class="site-nav">
+            <a href="/" class="site-logo">The Daily Web</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <% if (user) { %>
+                    <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
+                    <a href="/auth/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/login">Staff Login</a>
+                <% } %>
+            </div>
+        </nav>
+    </header>
 
     <%
-        // Staff members see the draft version if it exists and the article is not published
+        // Staff viewing logic
         const isStaff = user && user.role !== 'guest';
         const showDraft = isStaff && article.status !== 'published' && article.draftTitle;
         const displayTitle   = showDraft ? article.draftTitle   : article.title;
         const displayContent = showDraft ? article.draftContent : article.content;
     %>
 
-    <!-- Draft/status notice for staff -->
-    <% if (isStaff && article.status !== 'published') { %>
-        <div class="draft-notice">
-            <strong>Status:</strong> <%= article.status %>
-            <% if (showDraft) { %> &mdash; You are viewing the <strong>draft</strong> version.<% } %>
-        </div>
-    <% } %>
-
-    <!-- Editor note when article is returned for corrections -->
-    <% if (isStaff && article.editorNote) { %>
-        <div class="editor-note">
-            <strong>Editor's Note:</strong> <%= article.editorNote %>
-        </div>
-    <% } %>
-
-    <article>
-        <header class="article-header">
-            <h1><%= displayTitle %></h1>
-            <div class="article-meta">
-                <span>By <strong><%= article.author.username %></strong></span>
-                <span>Published: <%= article.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
-                <span>Category: <%= article.category %></span>
-                <span>Views: <%= article.viewsCount %></span>
+    <main class="article-page">
+        
+        <!-- Staff Notices -->
+        <% if (isStaff && article.status !== 'published') { %>
+            <div class="staff-notice notice-draft">
+                <strong>Status: <%= article.status.toUpperCase() %></strong> 
+                <% if (showDraft) { %>&mdash; You are currently viewing the unpublished draft version.<% } %>
             </div>
-        </header>
-
-        <% if (article.imageUrl) { %>
-            <img class="article-image" src="<%= article.imageUrl %>" alt="<%= displayTitle %>">
         <% } %>
 
-        <div class="article-content">
-            <%- displayContent %>
-        </div>
-    </article>
+        <% if (isStaff && article.editorNote) { %>
+            <div class="staff-notice notice-editor">
+                <strong>Editor's Note:</strong> <%= article.editorNote %>
+            </div>
+        <% } %>
 
-    <section class="comments-section">
-        <h2>Comments</h2>
-        <!-- Student 3 will build AJAX comments and attach them here -->
-        <div id="comments-container">
-            <p>Loading comments...</p>
-        </div>
-        <form id="add-comment-form">
-            <textarea name="content" placeholder="Add a comment..." required style="width:100%; min-height:80px; padding:8px;"></textarea>
-            <button type="submit" style="margin-top:8px; padding:8px 20px;">Post Comment</button>
-        </form>
-        <!-- <script src="/js/comments.js"></script> -->
-    </section>
+        <!-- Article Content -->
+        <article>
+            <header class="article-header">
+                <span class="article-category"><%= article.category %></span>
+                <h1 class="article-title"><%= displayTitle %></h1>
+                
+                <div class="article-meta">
+                    <div class="meta-author">
+                        By <strong><%= article.author.username %></strong>
+                    </div>
+                    <div class="meta-details">
+                        <time datetime="<%= article.createdAt.toISOString() %>">
+                            <%= article.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                        </time>
+                        &bull; <%= article.viewsCount %> Views
+                    </div>
+                </div>
+            </header>
+
+            <% if (article.imageUrl) { %>
+                <div class="article-image-container">
+                    <img src="<%= article.imageUrl %>" alt="<%= displayTitle %>">
+                </div>
+            <% } %>
+
+            <div class="article-body">
+                <%- displayContent %>
+            </div>
+        </article>
+
+        <!-- Comments Section (To be implemented by Student 3) -->
+        <section class="comments-section">
+            <h3>Comments</h3>
+            
+            <form id="add-comment-form" class="comment-form">
+                <textarea name="content" placeholder="Share your thoughts on this article..." required></textarea>
+                <button type="submit" class="btn-comment">Post Comment</button>
+            </form>
+
+            <div id="comments-container" style="margin-top: 30px;">
+                <p style="color: var(--light-text); font-style: italic;">Comments are currently loading...</p>
+                <!-- AJAX injected comments will appear here -->
+            </div>
+        </section>
+
+    </main>
 
 </body>
 </html>
