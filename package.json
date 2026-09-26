@@ -1,0 +1,33 @@
+{
+  "name": "thedailyweb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nitz121/the-daily-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nitz121/the-daily-web/issues"
+  },
+  "homepage": "https://github.com/nitz121/the-daily-web#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^18.0.4",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mongoose": "^9.10.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= article.title %> - The Daily Web</title>
+    <meta name="description" content="<%= article.content.substring(0, 150) %>...">
+    <!-- SSR rendering for SEO -->
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .article-header { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .article-meta { color: #666; font-size: 0.9em; }
+        .article-content { font-size: 1.1em; }
+        .comments-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/">דף הבית</a>
+        <% if (user) { %>
+            <span>שלום, <%= user.username %> | </span>
+            <a href="/auth/logout">התנתק</a>
+        <% } else { %>
+            <a href="/auth/login">התחברות כתבים/עורכים</a>
+        <% } %>
+    </nav>
+
+    <article>
+        <header class="article-header">
+            <h1><%= article.title %></h1>
+            <div class="article-meta">
+                <span>מאת: <%= article.author.username %></span> | 
+                <span>פורסם בתאריך: <%= article.createdAt.toLocaleDateString('he-IL') %></span> |
+                <span>קטגוריה: <%= article.category %></span> |
+                <span>צפיות: <%= article.viewsCount %></span>
+            </div>
+        </header>
+
+        <% if (article.imageUrl) { %>
+            <img src="<%= article.imageUrl %>" alt="<%= article.title %>" style="max-width: 100%; height: auto;">
+        <% } %>
+
+        <div class="article-content">
+            <%- article.content %> <!-- Allows HTML content for rich text -->
+        </div>
+    </article>
+
+    <section class="comments-section">
+        <h2>תגובות</h2>
+        <!-- Student 3 will build the dynamic AJAX comments here -->
+        <div id="comments-container">
+            <p>טוען תגובות...</p>
+        </div>
+        
+        <!-- Add Comment Form (AJAX by Student 3) -->
+        <form id="add-comment-form">
+            <textarea placeholder="הוסף תגובה..." required></textarea>
+            <button type="submit">שלח תגובה</button>
+        </form>
+    </section>
+
+    <!-- Student 3's JS for comments will go here -->
+    <!-- <script src="/js/comments.js"></script> -->
+</body>
+</html>
