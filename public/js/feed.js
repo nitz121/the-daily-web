@@ -350,10 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch('/api/weather');
-            if (!res.ok) throw new Error('Weather API error');
             const result = await res.json();
 
-            if (result.success && result.data) {
+            if (res.ok && result.success && result.data) {
                 const w = result.data;
                 const cacheText = result.cached ? 'Updated recently' : 'Just updated';
 
@@ -374,21 +373,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             } else {
-                throw new Error('Invalid weather data');
+                // If OpenWeatherMap key is still propagating/activating
+                const msg = (result && result.message) ? result.message : 'OpenWeatherMap API connecting...';
+                weatherContent.innerHTML = `
+                    <div style="padding: 10px 0; font-size: 0.85rem; color: #666;">
+                        <strong style="color: var(--primary-color);">OpenWeatherMap</strong>
+                        <p style="margin-top: 5px;">${msg}</p>
+                    </div>
+                `;
             }
         } catch (err) {
-            console.warn('Weather fetch failed, displaying offline fallback', err);
             weatherContent.innerHTML = `
-                <div class="weather-main">
-                    <span class="weather-icon">☀️</span>
-                    <div class="weather-temp-info">
-                        <span class="weather-temp">24&deg;C</span>
-                        <span class="weather-condition">Sunny & Clear</span>
-                    </div>
-                </div>
-                <div class="weather-details">
-                    <span>📍 Tel Aviv</span>
-                    <span>💨 Wind: 14 km/h</span>
+                <div style="padding: 10px 0; font-size: 0.85rem; color: #888;">
+                    <span>OpenWeatherMap service offline</span>
                 </div>
             `;
         }
