@@ -161,7 +161,8 @@ exports.getCategories = async (req, res) => {
 /**
  * API: Weather widget proxy with 15-minute server-side caching
  * GET /api/weather
- * Uses Open-Meteo API (free, no credit card, no API key required)
+ * Uses OpenWeatherMap API (configured via OPENWEATHER_API_KEY in .env)
+ * with graceful Open-Meteo fallback for reliability
  */
 exports.getWeather = async (req, res) => {
     try {
@@ -176,50 +177,97 @@ exports.getWeather = async (req, res) => {
             });
         }
 
-        // Coordinates for Tel Aviv (32.0853, 34.7818)
-        const url = 'https://api.open-meteo.com/v1/forecast?latitude=32.0853&longitude=34.7818&current_weather=true';
-        
-        // Native fetch in Node 18+
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Weather service returned HTTP ${response.status}`);
+        const apiKey = process.env.OPENWEATHER_API_KEY;
+        let weatherResult = null;
+
+        // 1. Try OpenWeatherMap if API key is provided
+        if (apiKey) {
+            try {
+                const owmUrl = `https://api.openweathermap.org/data/2.5/weather?q=Tel%20Aviv&units=metric&appid=${apiKey}`;
+                const owmRes = await fetch(owmUrl);
+                if (owmRes.ok) {
+                    const owmData = await owmRes.json();
+                    
+                    let condition = owmData.weather && owmData.weather[0] ? owmData.weather[0].main : 'Clear';
+                    let icon = '☀️';
+                    if (condition.includes('Cloud')) icon = '⛅';
+                    else if (condition.includes('Rain') || condition.includes('Drizzle')) icon = '🌧️';
+                    else if (condition.includes('Thunder')) icon = '⛈️';
+                    else if (condition.includes('Snow')) icon = '❄️';
+                    else if (condition.includes('Mist') || condition.includes('Fog')) icon = '🌫️';
+
+                    weatherResult = {
+                        city: owmData.name || 'Tel Aviv',
+                        temperature: Math.round(owmData.main.temp),
+                        windSpeed: Math.round((owmData.wind.speed || 0) * 3.6), // convert m/s to km/h
+                        condition: condition,
+                        icon: icon,
+                        source: 'OpenWeatherMap',
+                        updatedAt: new Date().toISOString()
+                    };
+                } else {
+                    console.warn(`OpenWeatherMap returned status ${owmRes.status} (key may still be activating), falling back to Open-Meteo`);
+                }
+            } catch (err) {
+                console.warn('OpenWeatherMap request failed:', err.message);
+            }
         }
 
-        const data = await response.json();
-        const current = data.current_weather || {};
+        // 2. Fallback to Open-Meteo if OpenWeatherMap is unavailable
+        if (!weatherResult) {
+            const omUrl = 'https://api.open-meteo.com/v1/forecast?latitude=32.0853&longitude=34.7818&current_weather=true';
+            const omRes = await fetch(omUrl);
+            if (omRes.ok) {
+                const omData = await omRes.json();
+                const current = omData.current_weather || {};
+                const weatherCode = current.weathercode;
 
-        // Map weather code to descriptive text and icon
-        const weatherCode = current.weathercode;
-        let condition = 'Clear';
-        let icon = '☀️';
+                let condition = 'Clear';
+                let icon = '☀️';
 
-        if ([1, 2, 3].includes(weatherCode)) {
-            condition = 'Partly Cloudy';
-            icon = '⛅';
-        } else if ([45, 48].includes(weatherCode)) {
-            condition = 'Foggy';
-            icon = '🌫️';
-        } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
-            condition = 'Rainy';
-            icon = '🌧️';
-        } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
-            condition = 'Snowy';
-            icon = '❄️';
-        } else if ([95, 96, 99].includes(weatherCode)) {
-            condition = 'Thunderstorm';
-            icon = '⛈️';
+                if ([1, 2, 3].includes(weatherCode)) {
+                    condition = 'Partly Cloudy';
+                    icon = '⛅';
+                } else if ([45, 48].includes(weatherCode)) {
+                    condition = 'Foggy';
+                    icon = '🌫️';
+                } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) {
+                    condition = 'Rainy';
+                    icon = '🌧️';
+                } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
+                    condition = 'Snowy';
+                    icon = '❄️';
+                } else if ([95, 96, 99].includes(weatherCode)) {
+                    condition = 'Thunderstorm';
+                    icon = '⛈️';
+                }
+
+                weatherResult = {
+                    city: 'Tel Aviv',
+                    temperature: Math.round(current.temperature),
+                    windSpeed: Math.round(current.windspeed),
+                    condition,
+                    icon,
+                    source: 'Open-Meteo',
+                    updatedAt: new Date().toISOString()
+                };
+            }
         }
 
-        const weatherResult = {
-            city: 'Tel Aviv',
-            temperature: Math.round(current.temperature),
-            windSpeed: current.windspeed,
-            condition,
-            icon,
-            updatedAt: new Date().toISOString()
-        };
+        // 3. Fallback data if both fail
+        if (!weatherResult) {
+            weatherResult = {
+                city: 'Tel Aviv',
+                temperature: 24,
+                windSpeed: 14,
+                condition: 'Clear Sky',
+                icon: '☀️',
+                source: 'Fallback',
+                updatedAt: new Date().toISOString()
+            };
+        }
 
-        // Save to cache
+        // Save to 15-minute in-memory cache
         weatherCache = {
             data: weatherResult,
             lastFetched: now
@@ -231,33 +279,7 @@ exports.getWeather = async (req, res) => {
             data: weatherResult
         });
     } catch (err) {
-        console.error('Weather API fetch error:', err.message);
-
-        // If fetch fails but we have previous cached data, return it
-        if (weatherCache.data) {
-            return res.json({
-                success: true,
-                cached: true,
-                fallback: true,
-                data: weatherCache.data
-            });
-        }
-
-        // Graceful fallback for offline development/presentation
-        const fallbackData = {
-            city: 'Tel Aviv',
-            temperature: 24,
-            windSpeed: 14,
-            condition: 'Clear Sky',
-            icon: '☀️',
-            updatedAt: new Date().toISOString()
-        };
-
-        res.json({
-            success: true,
-            cached: false,
-            fallback: true,
-            data: fallbackData
-        });
+        console.error('Weather error:', err.message);
+        res.status(500).json({ success: false, message: 'Weather service unavailable' });
     }
 };
