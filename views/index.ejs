@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Daily Web - Today's Top Stories & News Feed</title>
+    <meta name="description" content="Stay informed with real-time news, technology, sports, entertainment, and investigative reporting from The Daily Web.">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <nav class="site-nav">
+            <a href="/" class="site-logo">The Daily Web</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link-active">Home</a>
+                <% if (user) { %>
+                    <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
+                    <a href="/auth/logout">Logout</a>
+                <% } else { %>
+                    <a href="/auth/login">Staff Login</a>
+                <% } %>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Sub-header Date & Ticker Bar -->
+    <section class="top-bar">
+        <div class="container top-bar-content">
+            <div class="date-display" id="currentDateDisplay">
+                <!-- Injected via JS or localized date -->
+                <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+            </div>
+            <div class="live-indicator">
+                <span class="live-dot"></span> LIVE NEWS FEED
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <main class="container home-container">
+
+        <!-- Controls Section: Search, Category Filters, Sort & Viewed Dropdowns -->
+        <section class="feed-controls-section" aria-label="Feed controls">
+            <div class="controls-primary-row">
+                <!-- Search Box -->
+                <div class="search-box-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search headlines, articles, topics..."
+                        aria-label="Search articles"
+                        autocomplete="off"
+                    >
+                    <button type="button" id="clearSearchBtn" class="clear-search-btn" style="display: none;" title="Clear search">&times;</button>
+                </div>
+
+                <!-- Secondary Filter Selectors -->
+                <div class="controls-filters">
+                    <!-- Viewed / Unviewed Filter -->
+                    <div class="filter-group">
+                        <label for="viewedFilter">Status:</label>
+                        <select id="viewedFilter" class="custom-select" aria-label="Filter by reading status">
+                            <option value="all">All Articles</option>
+                            <option value="unviewed">Unread Only</option>
+                            <option value="viewed">Read Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort Selector -->
+                    <div class="filter-group">
+                        <label for="sortSelect">Sort:</label>
+                        <select id="sortSelect" class="custom-select" aria-label="Sort articles">
+                            <option value="date_desc">Newest First</option>
+                            <option value="date_asc">Oldest First</option>
+                            <option value="popularity">Most Popular</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Pills Bar -->
+            <div class="categories-bar" id="categoriesBar" role="tablist" aria-label="Filter by category">
+                <button type="button" class="category-pill active" data-category="all" role="tab" aria-selected="true">
+                    All Categories
+                </button>
+                <% if (categories && categories.length > 0) { %>
+                    <% categories.forEach(function(cat) { %>
+                        <button type="button" class="category-pill" data-category="<%= cat %>" role="tab" aria-selected="false">
+                            <%= cat %>
+                        </button>
+                    <% }); %>
+                <% } %>
+            </div>
+
+            <!-- Active filter chips & results count -->
+            <div class="active-status-bar" id="activeStatusBar">
+                <span id="resultsCountText" class="results-count">Loading articles...</span>
+                <button type="button" id="resetFiltersBtn" class="btn-reset-filters" style="display: none;">
+                    Reset Filters
+                </button>
+            </div>
+        </section>
+
+        <!-- Feed & Sidebar 2-Column Grid -->
+        <div class="home-layout">
+            
+            <!-- Main News Feed -->
+            <section class="feed-main" aria-label="Article feed">
+                
+                <!-- Articles Cards Container -->
+                <div id="articlesContainer" class="articles-grid">
+                    <!-- Injected dynamically via AJAX (public/js/feed.js) -->
+                </div>
+
+                <!-- Skeletons / Loading Indicator -->
+                <div id="loadingIndicator" class="loading-indicator">
+                    <div class="spinner"></div>
+                    <span>Fetching latest stories...</span>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResultsMessage" class="state-message" style="display: none;">
+                    <div class="state-icon">📰</div>
+                    <h3>No articles found</h3>
+                    <p>We couldn't find any published articles matching your criteria. Try adjusting your search or clearing the filters.</p>
+                    <button type="button" class="btn-primary-small" id="clearAllBtn">Clear All Filters</button>
+                </div>
+
+                <!-- End of Feed Message -->
+                <div id="endOfFeedMessage" class="state-message end-message" style="display: none;">
+                    <p>You have caught up with all published articles for this selection.</p>
+                </div>
+
+                <!-- Sentinel Element for Infinite Scroll (IntersectionObserver) -->
+                <div id="scrollSentinel" class="scroll-sentinel"></div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="feed-sidebar" aria-label="Sidebar widgets">
+                
+                <!-- Live Weather Widget (Open-Meteo Integration with 15-min cache) -->
+                <div class="sidebar-widget weather-widget" id="weatherWidget">
+                    <div class="widget-header">
+                        <h4>Local Weather</h4>
+                        <span class="cache-badge" title="Data is cached for up to 15 minutes">Cached 15m</span>
+                    </div>
+                    <div class="weather-content" id="weatherContent">
+                        <div class="weather-loading">
+                            <div class="mini-spinner"></div>
+                            <span>Checking forecast...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending / Popular Articles -->
+                <div class="sidebar-widget trending-widget">
+                    <div class="widget-header">
+                        <h4>Trending Headlines</h4>
+                    </div>
+                    <ul class="trending-list">
+                        <% if (trendingArticles && trendingArticles.length > 0) { %>
+                            <% trendingArticles.forEach(function(item, idx) { %>
+                                <li class="trending-item">
+                                    <span class="trending-rank"><%= idx + 1 %></span>
+                                    <div class="trending-info">
+                                        <a href="/article/<%= item._id %>" class="trending-title"><%= item.title %></a>
+                                        <div class="trending-meta">
+                                            <span class="category-tag-small"><%= item.category %></span>
+                                            <span class="views-tag"><%= item.viewsCount %> views</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        <% } else { %>
+                            <li class="trending-empty">No trending stories yet.</li>
+                        <% } %>
+                    </ul>
+                </div>
+
+                <!-- About Widget -->
+                <div class="sidebar-widget about-widget">
+                    <div class="widget-header">
+                        <h4>About The Daily Web</h4>
+                    </div>
+                    <p class="about-text">
+                        The Daily Web delivers fast, objective news coverage with independent journalism, in-depth reports, and community discussion.
+                    </p>
+                </div>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <p>&copy; <%= new Date().getFullYear() %> The Daily Web. All rights reserved.</p>
+            <p class="footer-subtext">Built with Node.js, Express, MongoDB, EJS & Vanilla JavaScript.</p>
+        </div>
+    </footer>
+
+    <!-- Client-side Feed Script (Student 2) -->
+    <script src="/js/feed.js"></script>
+
+</body>
+</html>

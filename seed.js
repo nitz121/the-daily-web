@@ -15,23 +15,13 @@ const seed = async () => {
     console.log('Cleared existing users and articles');
 
     // ── Users ──────────────────────────────────────────────────────────────
-    const users = await User.insertMany([
-        { username: 'editor_jane',    password: 'password123', role: 'editor'   },
-        { username: 'reporter_john',  password: 'password123', role: 'reporter' },
-        { username: 'reporter_alice', password: 'password123', role: 'reporter' },
-        { username: 'guest_user',     password: 'password123', role: 'guest'    },
-    ]);
-
-    // Note: insertMany bypasses the pre-save hook, so we need to hash manually.
-    // Instead, let's use save() for each user so bcrypt runs.
-    // The above insertMany is replaced by the loop below:
-    await User.deleteMany({});
     const userDefs = [
         { username: 'editor_jane',    password: 'password123', role: 'editor'   },
         { username: 'reporter_john',  password: 'password123', role: 'reporter' },
         { username: 'reporter_alice', password: 'password123', role: 'reporter' },
         { username: 'guest_user',     password: 'password123', role: 'guest'    },
     ];
+
     const savedUsers = [];
     for (const def of userDefs) {
         const u = new User(def);
@@ -41,16 +31,19 @@ const seed = async () => {
     }
 
     const [editor, reporter1, reporter2] = savedUsers;
+    const reporters = [reporter1, reporter2];
 
-    // ── Articles ───────────────────────────────────────────────────────────
-    const articles = [
+    // ── Base Core Articles ──────────────────────────────────────────────────
+    const coreArticles = [
         {
             title: 'Breaking: Local Tech Startup Raises $10M',
             content: '<p>A local technology startup has successfully raised $10 million in Series A funding, marking a significant milestone for the regional tech scene. Investors cited the company\'s innovative approach to renewable energy monitoring as the key driver of confidence.</p>',
             author: reporter1._id,
             category: 'Technology',
             status: 'published',
-            viewsCount: 142
+            viewsCount: 1420,
+            imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2)
         },
         {
             title: 'City Council Approves New Public Transport Plan',
@@ -58,46 +51,175 @@ const seed = async () => {
             author: reporter2._id,
             category: 'Local News',
             status: 'published',
-            viewsCount: 89
+            viewsCount: 890,
+            imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&auto=format&fit=crop&q=80',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5)
         },
         {
-            title: 'Weekend Sports Roundup',
-            content: '<p>This weekend saw exciting action across multiple sports. The local football team secured a 3-1 victory, while the basketball squad remains undefeated after their latest win.</p>',
+            title: 'Weekend Sports Roundup: Historic Championship Win',
+            content: '<p>This weekend saw exciting action across multiple leagues. The local football team secured a 3-1 victory in the final minutes, while the basketball squad remains undefeated following an overtime thriller.</p>',
             author: reporter1._id,
             category: 'Sports',
             status: 'published',
-            viewsCount: 203
+            viewsCount: 2030,
+            imageUrl: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&auto=format&fit=crop&q=80',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8)
         },
         {
             title: 'Draft Article: Upcoming Music Festival Preview',
-            content: '<p>This is the original published version.</p>',
-            draftTitle: 'Draft: Summer Music Festival - Full Preview',
+            content: '<p>This is the original published version previewing the summer lineup.</p>',
+            draftTitle: 'Draft: Summer Music Festival - Full Performer Schedule',
             draftContent: '<p>This is an updated draft with new performer announcements — not yet approved by the editor.</p>',
             author: reporter2._id,
             category: 'Entertainment',
             status: 'pending',
-            viewsCount: 0
+            viewsCount: 45,
+            imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80'
         },
         {
-            title: 'Investigating Water Quality Reports',
+            title: 'Investigating Water Quality Reports in Northern District',
             content: 'Draft - pending editor approval.',
-            draftTitle: 'Water Quality Issues in the Northern District',
-            draftContent: '<p>Initial draft content covering the water quality reports...</p>',
+            draftTitle: 'Water Quality Issues in the Northern District Rivers',
+            draftContent: '<p>Initial draft content covering the regional water quality reports...</p>',
             author: reporter1._id,
             category: 'Environment',
             status: 'returned',
             editorNote: 'Needs more verified sources. Please add at least 2 expert quotes before resubmitting.',
-            viewsCount: 0
-        },
+            viewsCount: 12,
+            imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80'
+        }
     ];
 
-    for (const def of articles) {
-        const a = new Article(def);
-        await a.save();
-        console.log(`  Created article: "${a.title}" [${a.status}]`);
+    // ── Generate 500+ Articles for Project Defense (Page 7 requirement) ─────
+    console.log('Generating 500+ demonstration articles across categories...');
+
+    const categories = ['Technology', 'Sports', 'Local News', 'Entertainment', 'Environment', 'Economy', 'Science', 'Health'];
+
+    const sampleTopics = {
+        'Technology': [
+            'Next-Gen AI Processors Unveiled by Semiconductor Giants',
+            'Quantum Computing Breakthrough Achieved at National Lab',
+            'Cybersecurity Experts Warn of Sophisticated Phishing Wave',
+            'Autonomous Electric Delivery Fleets Hit Metro Streets',
+            'New Open-Source Database Architecture Cuts Cloud Latency by 40%',
+            'Wearable Health Monitors Detect Heart Anomalies Early',
+            'Global Satellite Internet Constellation Completes Second Phase',
+            'Browser Standards Committee Finalizes Modern Web Specifications'
+        ],
+        'Sports': [
+            'Championship League Match Ends in Dramatic Penalty Shootout',
+            'Olympic Hopeful Smashes Decathlon National Record',
+            'Tennis Prodigy Shocks Top Seed in Straight Sets Victory',
+            'Marathon Winners Set Blistering Pace in City Downtown',
+            'Off-Season Trade Rumors Heat Up Ahead of Transfer Deadline',
+            'Youth Academy Players Promoted to First Team Squad',
+            'Basketball Finals: Underdogs Force Deciding Game 7',
+            'Extreme Mountain Biking World Tour Announces Host Venues'
+        ],
+        'Local News': [
+            'City Unveils New Green Urban Park with Solar Walkways',
+            'Downtown Historic District Preservation Plan Approved',
+            'Annual Community Food & Culture Festival Draws Record Crowds',
+            'Municipal Library Launches Free Digital Literacy Workshops',
+            'Bridge Renovation Project Nears Completion Ahead of Schedule',
+            'Regional Transit Authority Expands Night Owl Bus Service',
+            'Volunteers Plant Over 5,000 Trees in Suburban Reforestation',
+            'Local High School Robotics Team Wins National Contest'
+        ],
+        'Entertainment': [
+            'International Film Festival Awards Top Honors to Indie Drama',
+            'Pop Superstar Announces Global Stadium Tour for 2027',
+            'Acclaimed Director Returns with Gripping Mystery Mini-Series',
+            'Broadway Revival Breaks Box Office Records in Opening Weekend',
+            'Video Game Developers Release Highly Anticipated Space Odyssey',
+            'Museum Opens Immersive Exhibition on Renaissance Masters',
+            'Vinyl Record Sales Surge to 30-Year High Among Young Fans',
+            'Streaming Platform Renews Hit Sci-Fi Series for Final Season'
+        ],
+        'Environment': [
+            'Renewable Energy Grid Sets New Clean Generation Record',
+            'Marine Biologists Discover Thriving Deep-Sea Coral Colony',
+            'Clean Ocean Initiative Removes Over 100 Tons of Plastic',
+            'Reforestation Efforts Show Promising Recovery in Biodiversity',
+            'Scientists Develop Eco-Friendly Biodegradable Packaging Alternative',
+            'City Implements Advanced Rainwater Harvesting in Public Buildings',
+            'Wildlife Corridor Connects Fragmented Forest Reserves',
+            'Global Climate Summit Delegates Agree on Stricter Emissions Caps'
+        ],
+        'Economy': [
+            'Central Bank Announces Modest Interest Rate Adjustment',
+            'Export Sector Records Robust Growth Driven by Tech Exports',
+            'Small Businesses Benefit from New Microloan Assistance Program',
+            'Housing Market Cools as New Residential Projects Open',
+            'Retail Sales Show Strong Resilience in Quarterly Report',
+            'Renewable Energy Investments Outpace Traditional Energy Sectors',
+            'Employment Figures Exceed Expectations with 45,000 New Jobs',
+            'Stock Indices Rally Following Strong Corporate Earnings Reports'
+        ],
+        'Science': [
+            'James Webb Telescope Captures Unprecedented View of Early Galaxy',
+            'Researchers Discover Compound Targeting Drug-Resistant Bacteria',
+            'Physicists Observe Elusive Subatomic Particle Behavior',
+            'Geneticists Map Complete Genome of Endangered Alpine Flora',
+            'Deep Sea Exploration Probe Reaches Mariana Trench Depths',
+            'Clean Fusion Energy Experiment Sustains Plasma for Record Duration',
+            'Meteorological Satellite Network Enhances Hurricane Forecasting',
+            'Nanomaterial Innovation Paves the Way for Ultra-Efficient Batteries'
+        ],
+        'Health': [
+            'Clinical Trial Shows Promising Results for Universal Flu Vaccine',
+            'Nutritionists Emphasize Mediterranean Diet for Longevity',
+            'Mental Health Awareness Campaign Launches Across Universities',
+            'Breakthrough in Non-Invasive Glucose Monitoring for Diabetes',
+            'Pediatric Hospitals Adopt VR Distraction Therapy for Children',
+            'Cardiologists Release Updated Heart Health Guidelines',
+            'Sleep Researchers Correlate Consistent Rest with Cognitive Resilience',
+            'Telemedicine Usage Surges as Patients Embrace Digital Consultations'
+        ]
+    };
+
+    const generatedArticles = [];
+    const now = Date.now();
+
+    for (let i = 1; i <= 510; i++) {
+        const cat = categories[i % categories.length];
+        const topicList = sampleTopics[cat];
+        const baseTitle = topicList[i % topicList.length];
+        const title = i <= topicList.length ? baseTitle : `${baseTitle} (Part ${Math.floor(i / topicList.length) + 1})`;
+
+        const author = reporters[i % reporters.length];
+        
+        // Distribution of statuses: 470 published, 20 pending, 10 draft, 10 returned
+        let status = 'published';
+        if (i > 490) status = 'draft';
+        else if (i > 480) status = 'returned';
+        else if (i > 465) status = 'pending';
+
+        // Stagger publication dates over past 60 days
+        const daysAgo = (i % 60) + Math.random();
+        const createdAt = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
+
+        // Realistic views count
+        const viewsCount = Math.floor(Math.random() * 3500) + 15;
+
+        generatedArticles.push({
+            title: title,
+            content: `<p>This in-depth report on <strong>${title}</strong> examines the latest developments, implications, and expert insights shaping the ${cat.toLowerCase()} field today.</p><p>Stakeholders and industry observers note that ongoing innovations and proactive policies continue to play a pivotal role. Further updates and community discussions are expected in the coming weeks.</p>`,
+            author: author._id,
+            category: cat,
+            status: status,
+            viewsCount: viewsCount,
+            createdAt: createdAt,
+            updatedAt: createdAt
+        });
     }
 
-    console.log('\nSeed complete!');
+    // Save all articles to MongoDB
+    await Article.insertMany([...coreArticles, ...generatedArticles]);
+    const totalCount = await Article.countDocuments();
+    const publishedCount = await Article.countDocuments({ status: 'published' });
+
+    console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published).`);
     console.log('─────────────────────────────────');
     console.log('Login credentials (all passwords: password123):');
     console.log('  editor_jane    → role: editor');
