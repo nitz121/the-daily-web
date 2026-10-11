@@ -19,6 +19,15 @@ exports.getArticleById = async (req, res) => {
         article.viewsCount += 1;
         await article.save();
 
+        // Track viewed article in session (Student 2 viewed/unviewed filter)
+        if (!req.session.viewedArticles) {
+            req.session.viewedArticles = [];
+        }
+        const articleIdStr = article._id.toString();
+        if (!req.session.viewedArticles.includes(articleIdStr)) {
+            req.session.viewedArticles.push(articleIdStr);
+        }
+
         res.render('article', { article });
     } catch (error) {
         console.error(error);
