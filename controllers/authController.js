@@ -29,13 +29,23 @@ exports.postLogin = async (req, res) => {
         };
 
         // Redirect based on role
+        let target = '/';
         if (user.role === 'reporter') {
-            res.redirect('/reporter-dashboard'); // Student 3 will build this
+            target = '/reporter-dashboard'; // Student 3
         } else if (user.role === 'editor') {
-            res.redirect('/editor-dashboard'); // Student 4 will build this
-        } else {
-            res.redirect('/');
+            target = '/editor-dashboard'; // Student 4 will build this
         }
+
+        // Wait until the session is written to MongoDB before redirecting.
+        // Otherwise the browser may request the next page before the session
+        // exists in the store and the user is sent back to the login page.
+        req.session.save((err) => {
+            if (err) {
+                console.error(err);
+                return res.render('login', { error: 'Server error occurred' });
+            }
+            res.redirect(target);
+        });
     } catch (error) {
         console.error(error);
         res.render('login', { error: 'Server error occurred' });
