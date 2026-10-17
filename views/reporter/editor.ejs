@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= article ? 'Edit Article' : 'New Article' %> - The Daily Web</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/reporter.css">
+</head>
+<body>
+
+    <%- include('../partials/header') %>
+
+    <%
+        const isPublished = article && article.status === 'published';
+        const isReturned = article && (article.status === 'returned' || article.revisionStatus === 'returned');
+    %>
+
+    <main class="container reporter-page editor-page">
+
+        <header class="reporter-page-header">
+            <div>
+                <a href="/reporter-dashboard" class="back-to-list">&larr; My Articles</a>
+                <h1 id="editorHeading"><%= article ? 'Edit Article' : 'New Article' %></h1>
+            </div>
+            <!-- Autosave indicator -->
+            <p id="saveStatus" class="save-status" data-state="idle" role="status" aria-live="polite">
+                Your work is saved automatically
+            </p>
+        </header>
+
+        <% if (isReturned && article.editorNote) { %>
+            <div class="staff-notice notice-editor">
+                <strong>Returned for corrections - editor's note:</strong> <%= article.editorNote %>
+            </div>
+        <% } %>
+
+        <% if (isPublished && !locked) { %>
+            <div class="staff-notice notice-draft">
+                This article is live. Your changes are saved as a new version &mdash; readers keep seeing
+                the published version until an editor approves your update.
+            </div>
+        <% } %>
+
+        <% if (locked) { %>
+            <div class="staff-notice notice-draft">
+                This article is awaiting editor approval, so it can't be edited right now.
+            </div>
+        <% } %>
+
+        <form id="articleEditorForm" class="article-editor-form" novalidate
+              data-article-id="<%= article ? article._id : '' %>"
+              data-draft-updated-at="<%= article && article.draftUpdatedAt ? article.draftUpdatedAt.toISOString() : '' %>"
+              data-locked="<%= locked ? 'true' : 'false' %>"
+              data-can-submit="<%= canSubmit ? 'true' : 'false' %>">
+
+            <fieldset class="editor-fields" <%= locked ? 'disabled' : '' %>>
+                <div class="form-group">
+                    <label for="articleTitle">Title</label>
+                    <input type="text" id="articleTitle" name="title" maxlength="200"
+                           value="<%= draft.title %>" placeholder="Write a clear, informative headline">
+                </div>
+
+                <div class="editor-row">
+                    <div class="form-group">
+                        <label for="articleCategory">Category</label>
+                        <select id="articleCategory" name="category" class="custom-select editor-select">
+                            <option value="">Choose a category...</option>
+                            <% categories.forEach(function(cat) { %>
+                                <option value="<%= cat %>" <%= draft.category === cat ? 'selected' : '' %>><%= cat %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="articleImage">Main image URL <span class="optional">(optional)</span></label>
+                        <input type="url" id="articleImage" name="imageUrl" value="<%= draft.imageUrl %>" placeholder="https://...">
+                        <small id="imageHint" class="field-hint field-error" hidden>Enter a full link starting with http:// or https://</small>
+                    </div>
+                </div>
+
+                <figure id="imagePreview" class="image-preview" hidden>
+                    <img alt="Main image preview">
+                </figure>
+
+                <div class="form-group">
+                    <label for="articleContent">Article text</label>
+                    <textarea id="articleContent" name="content" class="editor-textarea" rows="18"
+                              placeholder="Write your article here. Leave an empty line between paragraphs."><%= draft.content %></textarea>
+                    <small class="field-hint">Leave an empty line between paragraphs. <span id="wordCount"></span></small>
+                </div>
+            </fieldset>
+
+            <p id="editorMessage" class="editor-message" role="alert" hidden></p>
+
+            <div class="editor-actions">
+                <a href="/reporter-dashboard" class="btn-secondary">Back to My Articles</a>
+                <% if (!locked) { %>
+                    <button type="submit" id="submitForApproval" class="btn-primary">Submit for Approval</button>
+                <% } %>
+            </div>
+        </form>
+    </main>
+
+    <script src="/js/article-editor.js"></script>
+
+</body>
+</html>
