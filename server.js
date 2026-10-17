@@ -47,6 +47,7 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use('/auth', require('./routes/auth'));
 app.use('/article', require('./routes/articles'));
 app.use('/', require('./routes/comments'));
+app.use('/', require('./routes/reporter'));
 app.use('/', require('./routes/feed'));
 
 const PORT = process.env.PORT || 3000;
