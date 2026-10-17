@@ -2,6 +2,11 @@
 /*        ARTICLE COMMENTS (STUDENT 3)       */
 /* ========================================= */
 
+/* The "hidden" attribute must win over display rules below (e.g. .btn-load-more is display:block) */
+[hidden] {
+    display: none !important;
+}
+
 /* Hidden visually but still read by screen readers (form labels) */
 .visually-hidden {
     position: absolute;
