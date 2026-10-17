@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Dashboard - The Daily Web</title>
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Shared Header -->
+    <header class="site-header">
+        <nav class="site-nav">
+            <a href="/" class="site-logo">The Daily Web</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/editor-dashboard" class="nav-link-active">Editor Dashboard</a>
+                <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
+                <a href="/auth/logout">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container editor-dashboard">
+
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">Editor Dashboard</h1>
+            <p class="dashboard-subtitle">Review submissions, manage every article and follow the impact of your updates.</p>
+        </header>
+
+        <!-- Result of the last action (approve / return / delete ...) -->
+        <div id="dashboardMessage" class="dashboard-message" role="status" aria-live="polite" hidden></div>
+
+        <!-- ── Articles management ───────────────────────────────────────── -->
+        <section class="sidebar-widget dashboard-panel" aria-labelledby="articlesHeading">
+            <div class="widget-header">
+                <h2 id="articlesHeading">Articles</h2>
+                <span class="panel-hint" id="articlesSummary"></span>
+            </div>
+
+            <div class="dashboard-toolbar">
+                <div class="status-tabs" role="tablist" aria-label="Filter articles by status">
+                    <button type="button" class="status-tab active" data-status="pending" role="tab" aria-selected="true">
+                        Pending approval <span class="tab-count" data-count-for="pending">0</span>
+                    </button>
+                    <button type="button" class="status-tab" data-status="published" role="tab" aria-selected="false">
+                        Published <span class="tab-count" data-count-for="published">0</span>
+                    </button>
+                    <button type="button" class="status-tab" data-status="returned" role="tab" aria-selected="false">
+                        Returned <span class="tab-count" data-count-for="returned">0</span>
+                    </button>
+                    <button type="button" class="status-tab" data-status="draft" role="tab" aria-selected="false">
+                        In preparation <span class="tab-count" data-count-for="draft">0</span>
+                    </button>
+                    <button type="button" class="status-tab" data-status="all" role="tab" aria-selected="false">
+                        All <span class="tab-count" data-count-for="all">0</span>
+                    </button>
+                </div>
+
+                <div class="search-box-wrapper dashboard-search">
+                    <span class="search-icon">🔍</span>
+                    <input type="search" id="editorSearch" class="search-input" placeholder="Search by title..."
+                           aria-label="Search articles by title" autocomplete="off" maxlength="100">
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="editor-table articles-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Article</th>
+                            <th scope="col">Author</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Last change</th>
+                            <th scope="col">Views</th>
+                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="articlesTableBody">
+                        <!-- Rows injected via AJAX (public/js/editor-dashboard.js) -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="articlesLoading" class="loading-indicator" hidden>
+                <div class="spinner"></div>
+                <span>Loading articles...</span>
+            </div>
+
+            <div id="articlesEmpty" class="state-message" hidden>
+                <div class="state-icon">🗂️</div>
+                <h3>No articles here</h3>
+                <p>Nothing matches this status and search.</p>
+            </div>
+
+            <div class="load-more-row">
+                <button type="button" id="loadMoreBtn" class="btn-secondary" hidden>Load more</button>
+            </div>
+        </section>
+
+        <!-- ── Impact Analytics ──────────────────────────────────────────── -->
+        <section class="sidebar-widget dashboard-panel" id="analyticsPanel" aria-labelledby="analyticsHeading">
+            <div class="widget-header">
+                <h2 id="analyticsHeading">Impact Analytics</h2>
+                <span class="panel-hint">Views over time and the effect of every approved update</span>
+            </div>
+
+            <div class="analytics-layout">
+                <aside class="top-articles" aria-labelledby="topArticlesHeading">
+                    <h3 id="topArticlesHeading" class="subheading">Most viewed &middot; last 7 days</h3>
+                    <ol id="topArticlesList" class="top-articles-list">
+                        <li class="top-articles-empty">Loading...</li>
+                    </ol>
+                </aside>
+
+                <div class="analytics-main">
+                    <div id="analyticsPlaceholder" class="state-message">
+                        <div class="state-icon">📈</div>
+                        <h3>Choose an article</h3>
+                        <p>Pick an article from the list, or press "Analytics" on a published article in the table above.</p>
+                    </div>
+
+                    <div id="analyticsContent" hidden>
+                        <div class="analytics-head">
+                            <div>
+                                <h3 id="analyticsTitle" class="analytics-title"></h3>
+                                <p id="analyticsMeta" class="analytics-meta"></p>
+                            </div>
+                            <div class="range-buttons" role="group" aria-label="Time range">
+                                <button type="button" class="range-btn" data-range="24h">24h</button>
+                                <button type="button" class="range-btn active" data-range="7d">7 days</button>
+                                <button type="button" class="range-btn" data-range="30d">30 days</button>
+                                <button type="button" class="range-btn" data-range="all">All</button>
+                            </div>
+                        </div>
+
+                        <div class="kpi-row">
+                            <div class="kpi-tile">
+                                <span class="kpi-label">Total views</span>
+                                <strong id="kpiTotal" class="kpi-value">0</strong>
+                            </div>
+                            <div class="kpi-tile">
+                                <span class="kpi-label">Views in range</span>
+                                <strong id="kpiRange" class="kpi-value">0</strong>
+                            </div>
+                            <div class="kpi-tile">
+                                <span class="kpi-label">Approved updates</span>
+                                <strong id="kpiUpdates" class="kpi-value">0</strong>
+                            </div>
+                            <div class="kpi-tile">
+                                <span class="kpi-label">Last update impact</span>
+                                <strong id="kpiImpact" class="kpi-value">&ndash;</strong>
+                            </div>
+                        </div>
+
+                        <div id="focusBanner" class="focus-banner" hidden>
+                            <span id="focusText"></span>
+                            <button type="button" id="focusBackBtn" class="btn-link">Back to full range</button>
+                        </div>
+
+                        <figure class="chart-figure">
+                            <div class="chart-container">
+                                <canvas id="impactChart" role="img" aria-label="Views over time with editor update markers"></canvas>
+                                <div id="analyticsLoading" class="chart-loading" hidden>
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                            <figcaption>
+                                Dashed lines mark the moments an editor approved and published the article
+                                (<span class="legend-publish">green</span>) or an update (<span class="legend-update">orange</span>).
+                            </figcaption>
+                        </figure>
+
+                        <h4 class="subheading">Publications &amp; updates</h4>
+                        <div class="table-wrapper">
+                            <table class="editor-table impact-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Version</th>
+                                        <th scope="col">Approved at</th>
+                                        <th scope="col">Editor</th>
+                                        <th scope="col">Avg views/h before</th>
+                                        <th scope="col">Avg views/h after</th>
+                                        <th scope="col">Change</th>
+                                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="impactTableBody"></tbody>
+                            </table>
+                        </div>
+                        <p class="field-hint">
+                            "Before" and "after" compare the average views per hour in the 24 hours around each update
+                            (shorter when another update happened sooner).
+                        </p>
+
+                        <div class="analytics-footer">
+                            <button type="button" id="resetStatsBtn" class="btn-danger-outline">Reset statistics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ── Review dialog ─────────────────────────────────────────────────── -->
+    <dialog id="reviewDialog" class="review-dialog" aria-labelledby="reviewTitle">
+        <div class="review-dialog-inner">
+            <header class="review-header">
+                <div>
+                    <span id="reviewStatus" class="status-badge"></span>
+                    <h2 id="reviewTitle">Review article</h2>
+                    <p id="reviewMeta" class="review-meta"></p>
+                </div>
+                <button type="button" class="dialog-close" id="reviewCloseBtn" aria-label="Close">&times;</button>
+            </header>
+
+            <div id="reviewLoading" class="loading-indicator" hidden>
+                <div class="spinner"></div>
+                <span>Loading article...</span>
+            </div>
+
+            <div id="reviewBody" class="review-scroll" hidden>
+                <p id="reviewNotice" class="staff-notice notice-draft"></p>
+                <p id="reviewPrevNote" class="staff-notice notice-editor" hidden></p>
+
+                <!-- What readers see now vs the version waiting for approval -->
+                <div class="review-columns" id="reviewColumns">
+                    <section class="review-column" id="liveColumn" aria-labelledby="liveHeading">
+                        <h3 class="column-heading" id="liveHeading">Currently published</h3>
+                        <h4 class="review-article-title" id="liveTitle"></h4>
+                        <div class="article-body review-body" id="liveContent"></div>
+                    </section>
+                    <section class="review-column proposed" id="draftColumn" aria-labelledby="draftHeading">
+                        <h3 class="column-heading" id="draftHeading">
+                            <span id="draftHeadingText">Proposed version</span>
+                            <span id="changeBadges"></span>
+                        </h3>
+                        <h4 class="review-article-title" id="draftTitle"></h4>
+                        <div class="article-body review-body" id="draftContent"></div>
+                    </section>
+                </div>
+
+                <!-- Edit mode (the editor edits the article) -->
+                <div id="editForm" class="edit-form" hidden>
+                    <p id="editWarning" class="staff-notice notice-draft"></p>
+                    <label for="editTitle" class="form-label">Title</label>
+                    <input type="text" id="editTitle" class="form-input" maxlength="200" required>
+                    <span id="editContentLabel" class="form-label">Content</span>
+                    <div id="editContent" class="article-body edit-content" contenteditable="true"
+                         role="textbox" aria-multiline="true" aria-labelledby="editContentLabel"></div>
+                </div>
+
+                <div class="review-note" id="noteBlock">
+                    <label for="editorNoteInput" class="form-label">
+                        Note to the reporter <span class="field-hint">(required when returning for corrections)</span>
+                    </label>
+                    <textarea id="editorNoteInput" maxlength="1000" rows="3"
+                              placeholder="Explain which corrections are needed..."></textarea>
+                </div>
+            </div>
+
+            <p id="reviewError" class="field-error" role="alert" hidden></p>
+
+            <footer class="review-actions">
+                <a id="previewLink" class="btn-link" href="#" target="_blank" rel="noopener">Open article page &#8599;</a>
+                <div class="review-actions-buttons">
+                    <button type="button" id="deleteBtn" class="btn-danger-outline">Delete</button>
+                    <button type="button" id="editBtn" class="btn-secondary">Edit</button>
+                    <button type="button" id="cancelEditBtn" class="btn-secondary" hidden>Cancel</button>
+                    <button type="button" id="saveEditBtn" class="btn-success" hidden>Save changes</button>
+                    <button type="button" id="returnBtn" class="btn-warning">Return for corrections</button>
+                    <button type="button" id="approveBtn" class="btn-success">Approve &amp; publish</button>
+                </div>
+            </footer>
+        </div>
+    </dialog>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <p>&copy; <%= new Date().getFullYear() %> The Daily Web. All rights reserved.</p>
+            <p class="footer-subtext">Built with Node.js, Express, MongoDB, EJS & Vanilla JavaScript.</p>
+        </div>
+    </footer>
+
+    <!-- Chart.js (Impact Analytics chart) + Editor Dashboard Script (Student 4) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="/js/editor-dashboard.js"></script>
+
+</body>
+</html>
