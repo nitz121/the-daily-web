@@ -19,6 +19,9 @@
             <div class="nav-links">
                 <a href="/">Home</a>
                 <% if (user) { %>
+                    <% if (user.role === 'reporter') { %>
+                        <a href="/reporter-dashboard">My Articles</a>
+                    <% } %>
                     <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
                     <a href="/auth/logout">Logout</a>
                 <% } else { %>
