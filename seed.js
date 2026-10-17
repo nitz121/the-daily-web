@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Article = require('./models/Article');
+const { seedComments } = require('./seeders/commentSeeder');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/thedailyweb';
 
@@ -215,11 +216,14 @@ const seed = async () => {
     }
 
     // Save all articles to MongoDB
-    await Article.insertMany([...coreArticles, ...generatedArticles]);
+    const savedArticles = await Article.insertMany([...coreArticles, ...generatedArticles]);
     const totalCount = await Article.countDocuments();
     const publishedCount = await Article.countDocuments({ status: 'published' });
 
-    console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published).`);
+    // ── Demo comments for published articles (Student 3) ───────────────────
+    const commentCount = await seedComments(savedArticles);
+
+    console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published), ${commentCount} comments.`);
     console.log('─────────────────────────────────');
     console.log('Login credentials (all passwords: password123):');
     console.log('  editor_jane    → role: editor');
