@@ -1,0 +1,212 @@
+/* ========================================= */
+/*        ARTICLE COMMENTS (STUDENT 3)       */
+/* ========================================= */
+
+/* Hidden visually but still read by screen readers (form labels) */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.comments-count {
+    font-family: var(--font-ui);
+    font-size: 1.1rem;
+    color: var(--light-text);
+    font-weight: normal;
+}
+
+/* ── Form ───────────────────────────────── */
+.comment-name-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+}
+
+.comment-name-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.comment-form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.comment-char-count {
+    font-size: 0.85rem;
+    color: var(--light-text);
+}
+
+.btn-comment:disabled {
+    background: #999;
+    cursor: not-allowed;
+}
+
+.comment-form-message {
+    margin-top: 12px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    border-left: 4px solid;
+}
+
+.comment-form-message.error {
+    background-color: var(--error-bg);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.comment-form-message.success {
+    background-color: #e6f4ea;
+    border-color: #28a745;
+    color: #1e5631;
+}
+
+.comments-closed {
+    color: var(--light-text);
+    font-style: italic;
+}
+
+/* ── List ───────────────────────────────── */
+.comments-status {
+    margin-top: 30px;
+    color: var(--light-text);
+    font-style: italic;
+}
+
+.comments-list {
+    list-style: none;
+    margin-top: 30px;
+}
+
+.comment-item {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comment-item:first-child {
+    border-top: 1px solid var(--border-color);
+}
+
+.comment-new {
+    animation: commentHighlight 2.5s ease-out;
+}
+
+@keyframes commentHighlight {
+    from { background-color: #fff8e1; }
+    to   { background-color: transparent; }
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 5px 15px;
+    margin-bottom: 8px;
+}
+
+.comment-author {
+    color: var(--primary-color);
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    color: var(--light-text);
+}
+
+.comment-body {
+    line-height: 1.6;
+    white-space: pre-wrap;      /* keep the line breaks the reader typed */
+    overflow-wrap: anywhere;    /* long words/links don't break the layout */
+}
+
+/* ── Editor moderation ──────────────────── */
+.comment-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.btn-comment-action {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.btn-comment-action:hover {
+    border-color: var(--primary-color);
+}
+
+.btn-comment-action.danger {
+    color: #b02a37;
+}
+
+.btn-comment-action.danger:hover {
+    border-color: #b02a37;
+}
+
+.comment-edit-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    resize: vertical;
+}
+
+/* ── Load more ──────────────────────────── */
+.btn-load-more {
+    display: block;
+    margin: 25px auto 0;
+    background: white;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 10px 25px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-load-more:hover {
+    background: var(--secondary-color);
+}
+
+.btn-load-more:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+/* ── Responsive ─────────────────────────── */
+@media (max-width: 650px) {
+    .comment-name-input {
+        max-width: none;
+    }
+    .comment-form-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .btn-comment {
+        width: 100%;
+    }
+}
