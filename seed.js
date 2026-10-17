@@ -2,6 +2,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const Article = require('./models/Article');
+const ViewStat = require('./models/ViewStat');
+const { applyLifecycle, buildViewStats, insertViewStats } = require('./seeders/editorSeeder');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/thedailyweb';
 
@@ -12,13 +14,15 @@ const seed = async () => {
     // Clear existing data
     await User.deleteMany({});
     await Article.deleteMany({});
-    console.log('Cleared existing users and articles');
+    await ViewStat.deleteMany({});
+    console.log('Cleared existing users, articles and view statistics');
 
     // ── Users ──────────────────────────────────────────────────────────────
     const userDefs = [
         { username: 'editor_jane',    password: 'password123', role: 'editor'   },
         { username: 'reporter_john',  password: 'password123', role: 'reporter' },
         { username: 'reporter_alice', password: 'password123', role: 'reporter' },
+        { username: 'reporter_dana',  password: 'password123', role: 'reporter' },
         { username: 'guest_user',     password: 'password123', role: 'guest'    },
     ];
 
@@ -30,8 +34,8 @@ const seed = async () => {
         console.log(`  Created user: ${u.username} (${u.role})`);
     }
 
-    const [editor, reporter1, reporter2] = savedUsers;
-    const reporters = [reporter1, reporter2];
+    const [editor, reporter1, reporter2, reporter3] = savedUsers;
+    const reporters = [reporter1, reporter2, reporter3];
 
     // ── Base Core Articles ──────────────────────────────────────────────────
     const coreArticles = [
@@ -66,15 +70,20 @@ const seed = async () => {
             createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8)
         },
         {
-            title: 'Draft Article: Upcoming Music Festival Preview',
+            // Published article with an update waiting for approval (Student 4):
+            // readers keep seeing title/content until the editor approves the draft fields
+            title: 'Upcoming Music Festival Preview',
             content: '<p>This is the original published version previewing the summer lineup.</p>',
-            draftTitle: 'Draft: Summer Music Festival - Full Performer Schedule',
-            draftContent: '<p>This is an updated draft with new performer announcements — not yet approved by the editor.</p>',
+            draftTitle: 'Summer Music Festival - Full Performer Schedule',
+            draftContent: '<p>This is an updated version with new performer announcements — not yet approved by the editor.</p>',
             author: reporter2._id,
             category: 'Entertainment',
-            status: 'pending',
+            status: 'published',
+            revisionStatus: 'pending',
             viewsCount: 45,
-            imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80'
+            imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
+            updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 3)
         },
         {
             title: 'Investigating Water Quality Reports in Northern District',
@@ -189,7 +198,7 @@ const seed = async () => {
 
         const author = reporters[i % reporters.length];
         
-        // Distribution of statuses: 470 published, 20 pending, 10 draft, 10 returned
+        // Distribution of statuses: 465 published, 15 pending, 10 returned, 20 draft
         let status = 'published';
         if (i > 490) status = 'draft';
         else if (i > 480) status = 'returned';
@@ -214,17 +223,34 @@ const seed = async () => {
         });
     }
 
+    // ── Publication history, updates & view statistics (Student 4) ─────────
+    const allArticles = [...coreArticles, ...generatedArticles];
+    const lifecycle = applyLifecycle(allArticles, editor);
+    const viewStats = buildViewStats(allArticles);
+
     // Save all articles to MongoDB
-    await Article.insertMany([...coreArticles, ...generatedArticles]);
+    await Article.insertMany(allArticles);
+    console.log(`Inserting ${viewStats.length} hourly view buckets...`);
+    await insertViewStats(viewStats);
+
     const totalCount = await Article.countDocuments();
     const publishedCount = await Article.countDocuments({ status: 'published' });
+    const totalViews = viewStats.reduce((sum, bucket) => sum + bucket.count, 0);
 
     console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published).`);
+    console.log(`  Not published yet:                 ${lifecycle.unpublished}`);
+    console.log(`  Published with an update in progress: ${lifecycle.updatesInProgress}`);
+    console.log(`  Updated several times after publish: ${lifecycle.multiUpdate.length}`);
+    console.log(`  View buckets: ${viewStats.length} (${totalViews} views)`);
+    if (lifecycle.demoUpdateAt14) {
+        console.log(`  Demo: "${lifecycle.demoUpdateAt14}" got an update approved two days ago at 14:00`);
+    }
     console.log('─────────────────────────────────');
     console.log('Login credentials (all passwords: password123):');
     console.log('  editor_jane    → role: editor');
     console.log('  reporter_john  → role: reporter');
     console.log('  reporter_alice → role: reporter');
+    console.log('  reporter_dana  → role: reporter');
     console.log('  guest_user     → role: guest');
     console.log('─────────────────────────────────');
 
