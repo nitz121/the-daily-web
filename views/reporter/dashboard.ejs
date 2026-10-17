@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Articles - The Daily Web</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/reporter.css">
+</head>
+<body>
+
+    <%- include('../partials/header') %>
+
+    <main class="container reporter-page">
+
+        <header class="reporter-page-header">
+            <div>
+                <h1>My Articles</h1>
+                <p class="reporter-subtitle">Write and edit your stories, then submit them for editor approval.</p>
+            </div>
+            <a href="/reporter/articles/new" class="btn-primary">+ New Article</a>
+        </header>
+
+        <!-- Toast message (submitted from the editor / errors from list actions) -->
+        <div id="reporterToast" class="reporter-toast success" role="status" <%= submitted ? '' : 'hidden' %>>
+            Your article was submitted for editor approval.
+        </div>
+
+        <!-- Filters: status tabs & title search -->
+        <section class="reporter-controls" aria-label="Filter my articles">
+            <div class="status-tabs" role="tablist" aria-label="Filter by status">
+                <button type="button" class="status-tab active" data-status="all" role="tab" aria-selected="true">
+                    All <span class="tab-count" data-count="all"></span>
+                </button>
+                <button type="button" class="status-tab" data-status="draft" role="tab" aria-selected="false">
+                    In Preparation <span class="tab-count" data-count="draft"></span>
+                </button>
+                <button type="button" class="status-tab" data-status="pending" role="tab" aria-selected="false">
+                    Awaiting Approval <span class="tab-count" data-count="pending"></span>
+                </button>
+                <button type="button" class="status-tab" data-status="returned" role="tab" aria-selected="false">
+                    Returned for Corrections <span class="tab-count" data-count="returned"></span>
+                </button>
+                <button type="button" class="status-tab" data-status="published" role="tab" aria-selected="false">
+                    Published <span class="tab-count" data-count="published"></span>
+                </button>
+            </div>
+
+            <div class="search-box-wrapper reporter-search">
+                <span class="search-icon">🔍</span>
+                <input type="search" id="reporterSearch" class="search-input"
+                       placeholder="Search my articles by title..." aria-label="Search my articles by title" autocomplete="off">
+            </div>
+        </section>
+
+        <p id="reporterResults" class="reporter-results" aria-live="polite">Loading your articles...</p>
+
+        <!-- Article list - rendered via AJAX (public/js/reporter-dashboard.js) -->
+        <ul id="reporterArticleList" class="reporter-article-list"></ul>
+
+        <div id="reporterEmpty" class="state-message" hidden>
+            <div class="state-icon">📝</div>
+            <h3>No articles here</h3>
+            <p>Nothing matches this filter. Try another tab, or start a new article.</p>
+            <a href="/reporter/articles/new" class="btn-primary">+ New Article</a>
+        </div>
+
+        <button type="button" id="reporterLoadMore" class="btn-secondary reporter-load-more" hidden>Load more</button>
+    </main>
+
+    <script src="/js/reporter-dashboard.js"></script>
+
+</body>
+</html>

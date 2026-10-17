@@ -1,0 +1,18 @@
+<!-- Shared Header -->
+<header class="site-header">
+    <nav class="site-nav">
+        <a href="/" class="site-logo">The Daily Web</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <% if (user) { %>
+                <% if (user.role === 'reporter') { %>
+                    <a href="/reporter-dashboard">My Articles</a>
+                <% } %>
+                <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
+                <a href="/auth/logout">Logout</a>
+            <% } else { %>
+                <a href="/auth/login">Staff Login</a>
+            <% } %>
+        </div>
+    </nav>
+</header>
