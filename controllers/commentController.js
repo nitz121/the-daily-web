@@ -2,19 +2,12 @@ const mongoose = require('mongoose');
 const Article = require('../models/Article');
 const Comment = require('../models/Comment');
 const logger = require('../utils/logger');
+const escapeRegex = require('../utils/escapeRegex');
 
 const MAX_CONTENT_LENGTH = 1000;
 const MAX_NAME_LENGTH = 50;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
-
-/**
- * Escape user input before using it inside a MongoDB $regex,
- * so characters like "(" or "*" are searched literally and can't break the query.
- */
-function escapeRegex(text) {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 /**
  * Only these fields are sent to the browser (deviceId / ipAddress stay private).
