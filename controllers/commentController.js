@@ -91,7 +91,7 @@ exports.getComments = async (req, res) => {
             comments: comments.map(toPublicComment)
         });
     } catch (err) {
-        logger.error('comments_list_failed', { articleId: req.params.id, message: err.message });
+        logger.error('Comments list failed', { articleId: req.params.id, error: err.message });
         res.status(500).json({ success: false, message: 'Failed to load comments' });
     }
 };
@@ -133,11 +133,11 @@ exports.createComment = async (req, res) => {
             ipAddress: req.ip
         });
 
-        logger.info('comment_created', { commentId: comment._id.toString(), articleId, deviceId: req.deviceId });
+        logger.info('Comment created', { commentId: String(comment._id), articleId, deviceId: req.deviceId });
 
         res.status(201).json({ success: true, comment: toPublicComment(comment) });
     } catch (err) {
-        logger.error('comment_create_failed', { articleId: req.params.id, message: err.message });
+        logger.error('Comment create failed', { articleId: req.params.id, error: err.message });
         res.status(500).json({ success: false, message: 'Failed to post comment' });
     }
 };
@@ -168,10 +168,10 @@ exports.updateComment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Comment not found' });
         }
 
-        logger.info('comment_updated', { commentId, by: req.session.user.username });
+        logger.info('Comment edited by editor', { commentId, editor: req.session.user.username });
         res.json({ success: true, comment: toPublicComment(comment) });
     } catch (err) {
-        logger.error('comment_update_failed', { commentId: req.params.id, message: err.message });
+        logger.error('Comment update failed', { commentId: req.params.id, error: err.message });
         res.status(500).json({ success: false, message: 'Failed to update comment' });
     }
 };
@@ -192,10 +192,10 @@ exports.deleteComment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Comment not found' });
         }
 
-        logger.info('comment_deleted', { commentId, articleId: comment.articleId.toString(), by: req.session.user.username });
+        logger.info('Comment deleted by editor', { commentId, articleId: String(comment.articleId), editor: req.session.user.username });
         res.json({ success: true });
     } catch (err) {
-        logger.error('comment_delete_failed', { commentId: req.params.id, message: err.message });
+        logger.error('Comment delete failed', { commentId: req.params.id, error: err.message });
         res.status(500).json({ success: false, message: 'Failed to delete comment' });
     }
 };
