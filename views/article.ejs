@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= article.title %> - The Daily Web</title>
-    <!-- Use substring carefully since content might contain HTML tags. For safety in meta tags, Student 4 should probably strip HTML. -->
-    <meta name="description" content="News article from The Daily Web">
+    <title><%= article.title || article.draftTitle %> - The Daily Web</title>
+    <!-- Plain-text summary of the article body (HTML stripped in articleController) -->
+    <meta name="description" content="<%= metaDescription || 'News article from The Daily Web' %>">
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/comments.css">
@@ -21,6 +21,8 @@
                 <% if (user) { %>
                     <% if (user.role === 'reporter') { %>
                         <a href="/reporter-dashboard">My Articles</a>
+                    <% } else if (user.role === 'editor') { %>
+                        <a href="/editor-dashboard">Editor Dashboard</a>
                     <% } %>
                     <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
                     <a href="/auth/logout">Logout</a>
@@ -32,20 +34,26 @@
     </header>
 
     <%
-        // Staff viewing logic
+        // Staff viewing logic (showDraft is decided in articleController:
+        // the working version of an unpublished article or of an update in progress)
         const isStaff = user && user.role !== 'guest';
-        const showDraft = isStaff && article.status !== 'published' && article.draftTitle;
         const displayTitle   = showDraft ? article.draftTitle   : article.title;
         const displayContent = showDraft ? article.draftContent : article.content;
+        const displayDate    = article.publishedAt || article.createdAt;
     %>
 
     <main class="article-page">
-        
+
         <!-- Staff Notices -->
         <% if (isStaff && article.status !== 'published') { %>
             <div class="staff-notice notice-draft">
-                <strong>Status: <%= article.status.toUpperCase() %></strong> 
+                <strong>Status: <%= article.status.toUpperCase() %></strong>
                 <% if (showDraft) { %>&mdash; You are currently viewing the unpublished draft version.<% } %>
+            </div>
+        <% } else if (isStaff && article.revisionStatus) { %>
+            <div class="staff-notice notice-draft">
+                <strong>Published &middot; update <%= article.revisionStatus.toUpperCase() %></strong>
+                <% if (showDraft) { %>&mdash; You are viewing the unpublished update. Readers still see the last approved version.<% } %>
             </div>
         <% } %>
 
@@ -66,8 +74,8 @@
                         By <strong><%= article.author.username %></strong>
                     </div>
                     <div class="meta-details">
-                        <time datetime="<%= article.createdAt.toISOString() %>">
-                            <%= article.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                        <time datetime="<%= displayDate.toISOString() %>">
+                            <%= displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
                         </time>
                         &bull; <%= article.viewsCount %> Views
                     </div>

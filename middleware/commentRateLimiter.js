@@ -40,7 +40,7 @@ module.exports = async (req, res, next) => {
             const oldest = recentComments[0].createdAt.getTime();
             const retryAfter = Math.max(1, Math.ceil((oldest + WINDOW_MS - Date.now()) / 1000));
 
-            logger.warn('comment_rate_limited', { deviceId, ipAddress, articleId: req.params.id, retryAfter });
+            logger.warn('Comment blocked by rate limit', { deviceId, ipAddress, articleId: req.params.id, retryAfter });
 
             res.set('Retry-After', String(retryAfter));
             return res.status(429).json({
@@ -54,7 +54,7 @@ module.exports = async (req, res, next) => {
         req.deviceId = deviceId;
         next();
     } catch (err) {
-        logger.error('comment_rate_limiter_failed', { message: err.message });
+        logger.error('Comment rate limiter failed', { error: err.message });
         res.status(500).json({ success: false, message: 'Could not verify comment rate limit' });
     }
 };

@@ -18,6 +18,8 @@
                 <% if (user) { %>
                     <% if (user.role === 'reporter') { %>
                         <a href="/reporter-dashboard">My Articles</a>
+                    <% } else if (user.role === 'editor') { %>
+                        <a href="/editor-dashboard">Editor Dashboard</a>
                     <% } %>
                     <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
                     <a href="/auth/logout">Logout</a>
