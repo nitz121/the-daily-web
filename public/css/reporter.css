@@ -33,51 +33,33 @@
 }
 
 /* ── Buttons ────────────────────────────── */
-.reporter-page .btn-primary,
-.reporter-page .btn-secondary,
-.reporter-page .btn-link {
+/* .btn-secondary and .btn-link come from style.css (shared with the editor dashboard).
+   Here: the primary button, and links styled as buttons. */
+.reporter-page .btn-primary {
     display: inline-block;
-    padding: 9px 18px;
+    padding: 8px 18px;
     border-radius: 4px;
     font-size: 0.9rem;
     font-weight: 600;
     font-family: var(--font-ui);
     text-decoration: none;
-    cursor: pointer;
     text-align: center;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.reporter-page .btn-primary {
+    cursor: pointer;
     background: var(--primary-color);
     color: white;
     border: 1px solid var(--primary-color);
+    transition: background-color 0.2s;
 }
 
 .reporter-page .btn-primary:hover {
     background: #333;
 }
 
-.reporter-page .btn-secondary {
-    background: white;
-    color: var(--primary-color);
-    border: 1px solid var(--border-color);
-}
-
-.reporter-page .btn-secondary:hover {
-    border-color: var(--primary-color);
-}
-
-.reporter-page .btn-link {
-    background: none;
-    border: 1px solid transparent;
-    color: var(--accent-color);
-    padding-left: 8px;
-    padding-right: 8px;
-}
-
-.reporter-page .btn-link:hover {
-    text-decoration: underline;
+.reporter-page a.btn-secondary,
+.reporter-page a.btn-link {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
 }
 
 .reporter-page button:disabled {
@@ -119,50 +101,9 @@
     gap: 15px;
 }
 
-.status-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.status-tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 14px;
-    background: #f0f2f5;
-    border: 1px solid transparent;
-    border-radius: 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #495057;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.status-tab:hover {
-    background: #e2e6ea;
-}
-
-.status-tab.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-.tab-count {
-    font-size: 0.75rem;
-    background: rgba(0, 0, 0, 0.08);
-    border-radius: 10px;
-    padding: 1px 7px;
-}
-
-.tab-count:empty {
-    display: none;
-}
-
-.status-tab.active .tab-count {
-    background: rgba(255, 255, 255, 0.2);
+/* .status-tabs / .status-tab / .tab-count come from style.css (same tabs as the editor dashboard) */
+.reporter-page .tab-count:empty {
+    display: none; /* until the counters are loaded */
 }
 
 .reporter-search {
@@ -261,32 +202,7 @@
     margin: 25px auto 0;
 }
 
-/* ── Status badges ──────────────────────── */
-.status-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.status-draft     { background: #e7f1ff; color: #0056b3; }
-.status-pending   { background: #fff3cd; color: #856404; }
-.status-published { background: #e6f4ea; color: #1e5631; }
-.status-returned  { background: #f8d7da; color: #721c24; }
-
-.status-badge.revision {
-    background: white;
-    border: 1px dashed currentColor;
-    text-transform: none;
-    font-weight: 600;
-}
-
-.revision-draft    { color: #0056b3; }
-.revision-pending  { color: #856404; }
-.revision-returned { color: #b02a37; }
+/* Status badges (.status-badge, .status-draft/pending/published/returned) come from style.css */
 
 /* ── Editor ─────────────────────────────── */
 .back-to-list {
@@ -379,15 +295,21 @@
     color: var(--light-text);
 }
 
-.field-hint {
+/* .field-hint / .field-error colors come from style.css; here only their position in the form */
+.editor-page .field-hint {
     display: block;
     margin-top: 6px;
-    font-size: 0.8rem;
-    color: var(--light-text);
 }
 
-.field-hint.field-error {
-    color: #b02a37;
+.editor-locked-hint {
+    margin: -0.75rem 0 1.25rem;
+}
+
+.editor-select:disabled,
+#articleImage:disabled {
+    background: var(--secondary-color);
+    color: var(--light-text);
+    cursor: not-allowed;
 }
 
 .image-preview {

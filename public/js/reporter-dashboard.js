@@ -6,20 +6,28 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Labels (the four article states from the spec) ──────────────────────
+    // ── Labels (the four article states - same wording as the editor dashboard) ──
     const STATUS_LABELS = {
-        draft: 'In Preparation',
-        pending: 'Awaiting Approval',
+        draft: 'In preparation',
+        pending: 'Pending approval',
         published: 'Published',
-        returned: 'Returned for Corrections'
+        returned: 'Returned for corrections'
     };
 
-    // State of an update to an already published article
-    const REVISION_LABELS = {
-        draft: 'Update in progress',
-        pending: 'Update awaiting approval',
-        returned: 'Update returned for corrections'
+    // Stage of an update to a published article (revisionStatus)
+    const UPDATE_LABELS = {
+        draft: 'update in preparation',
+        pending: 'update pending',
+        returned: 'update returned'
     };
+
+    // Badge text: a published article with an update in progress keeps being shown to readers
+    function stageText(article) {
+        if (article.status === 'published' && article.revisionStatus) {
+            return `Published · ${UPDATE_LABELS[article.revisionStatus]}`;
+        }
+        return STATUS_LABELS[article.status] || article.status;
+    }
 
     // ── State ───────────────────────────────────────────────────────────────
     let currentStatus = 'all';
@@ -82,10 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const main = createElement('div', 'reporter-article-main');
 
         const badges = createElement('div', 'reporter-article-badges');
-        badges.appendChild(createElement('span', `status-badge status-${article.status}`, STATUS_LABELS[article.status] || article.status));
-        if (article.status === 'published' && article.revisionStatus) {
-            badges.appendChild(createElement('span', `status-badge revision revision-${article.revisionStatus}`, REVISION_LABELS[article.revisionStatus]));
-        }
+        badges.appendChild(createElement('span', `status-badge status-${article.stage}`, stageText(article)));
         if (article.category) {
             badges.appendChild(createElement('span', 'category-tag-small', article.category));
         }
@@ -205,12 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function submitArticle(articleId, button) {
         button.disabled = true;
         try {
-            const res = await fetch(`/api/articles/${articleId}/submit`, { method: 'PATCH' });
+            // Shared status endpoint - the Article state machine decides if the move is allowed
+            const res = await fetch(`/api/articles/${articleId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'pending' })
+            });
             const data = await readJson(res);
             if (!res.ok || !data.success) {
                 throw new Error(data.message || 'Could not submit the article.');
             }
-            showToast('Your article was submitted for editor approval.', 'success');
+            showToast(data.message || 'Submitted for editor approval.', 'success');
             fetchArticles(true);
         } catch (error) {
             showToast(error.message, 'error');

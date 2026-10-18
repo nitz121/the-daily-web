@@ -65,14 +65,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // The data sent to the server. An image URL that is still being typed
     // (not a valid link yet) is left out, so the other fields keep saving.
+    // Category and image are disabled (and not sent) for a published article -
+    // only its title and text go through the update approval.
     function readPayload() {
-        const imageUrl = imageInput.value.trim();
         const payload = {
             title: titleInput.value,
-            category: categorySelect.value,
             content: contentInput.value
         };
-        if (!imageUrl || isValidImageUrl(imageUrl)) {
+        if (!categorySelect.disabled) {
+            payload.category = categorySelect.value;
+        }
+        const imageUrl = imageInput.value.trim();
+        if (!imageInput.disabled && (!imageUrl || isValidImageUrl(imageUrl))) {
             payload.imageUrl = imageUrl;
         }
         return payload;
@@ -160,16 +164,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const backup = readBackup();
         if (!backup || !backup.fields) return;
 
-        const serverSavedAt = form.dataset.draftUpdatedAt ? new Date(form.dataset.draftUpdatedAt).getTime() : 0;
+        const serverSavedAt = form.dataset.updatedAt ? new Date(form.dataset.updatedAt).getTime() : 0;
         if (backup.savedAt <= serverSavedAt || JSON.stringify(backup.fields) === lastSavedSnapshot) {
             clearBackup();
             return;
         }
 
         titleInput.value = backup.fields.title || '';
-        categorySelect.value = backup.fields.category || '';
         contentInput.value = backup.fields.content || '';
-        if (backup.fields.imageUrl !== undefined) imageInput.value = backup.fields.imageUrl;
+        if (backup.fields.category !== undefined && !categorySelect.disabled) categorySelect.value = backup.fields.category;
+        if (backup.fields.imageUrl !== undefined && !imageInput.disabled) imageInput.value = backup.fields.imageUrl;
 
         showMessage('We restored changes from this device that had not been saved yet.', 'info');
         saveNow();
@@ -213,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (snapshot === lastSavedSnapshot) return true;
 
         // Don't create an empty article
-        const isEmpty = !payload.title.trim() && !payload.content.trim() && !payload.category && !payload.imageUrl;
+        const isEmpty = !payload.title.trim() && !payload.content.trim() && !payload.imageUrl;
         if (!articleId && isEmpty) return true;
 
         firstUnsavedChangeAt = null;
@@ -355,13 +359,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (titleInput.value.trim().length < MIN_TITLE_LENGTH) {
             return `Please write a title (at least ${MIN_TITLE_LENGTH} characters).`;
         }
-        if (!categorySelect.value) {
-            return 'Please choose a category.';
-        }
         if (contentInput.value.trim().length < MIN_CONTENT_LENGTH) {
             return `The article text is too short (at least ${MIN_CONTENT_LENGTH} characters).`;
         }
-        if (imageInput.value.trim() && !isValidImageUrl(imageInput.value.trim())) {
+        if (!imageInput.disabled && imageInput.value.trim() && !isValidImageUrl(imageInput.value.trim())) {
             return 'Please fix the image URL (it must start with http:// or https://) or leave it empty.';
         }
         return null;
@@ -395,7 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await fetch(`/api/articles/${articleId}/submit`, { method: 'PATCH' });
+            // Shared status endpoint - the Article state machine checks that this
+            // reporter may move the article (or its update) to "Pending approval"
+            const res = await fetch(`/api/articles/${articleId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'pending' })
+            });
             const data = await readJson(res);
             if (!res.ok || !data.success) {
                 throw new Error(data.message || 'Could not submit the article.');

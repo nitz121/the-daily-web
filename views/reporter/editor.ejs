@@ -12,7 +12,6 @@
     <%- include('../partials/header') %>
 
     <%
-        const isPublished = article && article.status === 'published';
         const isReturned = article && (article.status === 'returned' || article.revisionStatus === 'returned');
     %>
 
@@ -50,7 +49,7 @@
 
         <form id="articleEditorForm" class="article-editor-form" novalidate
               data-article-id="<%= article ? article._id : '' %>"
-              data-draft-updated-at="<%= article && article.draftUpdatedAt ? article.draftUpdatedAt.toISOString() : '' %>"
+              data-updated-at="<%= article ? article.updatedAt.toISOString() : '' %>"
               data-locked="<%= locked ? 'true' : 'false' %>"
               data-can-submit="<%= canSubmit ? 'true' : 'false' %>">
 
@@ -64,8 +63,7 @@
                 <div class="editor-row">
                     <div class="form-group">
                         <label for="articleCategory">Category</label>
-                        <select id="articleCategory" name="category" class="custom-select editor-select">
-                            <option value="">Choose a category...</option>
+                        <select id="articleCategory" name="category" class="custom-select editor-select" <%= isPublished ? 'disabled' : '' %>>
                             <% categories.forEach(function(cat) { %>
                                 <option value="<%= cat %>" <%= draft.category === cat ? 'selected' : '' %>><%= cat %></option>
                             <% }); %>
@@ -74,10 +72,18 @@
 
                     <div class="form-group">
                         <label for="articleImage">Main image URL <span class="optional">(optional)</span></label>
-                        <input type="url" id="articleImage" name="imageUrl" value="<%= draft.imageUrl %>" placeholder="https://...">
+                        <input type="url" id="articleImage" name="imageUrl" value="<%= draft.imageUrl %>" placeholder="https://..."
+                               <%= isPublished ? 'disabled' : '' %>>
                         <small id="imageHint" class="field-hint field-error" hidden>Enter a full link starting with http:// or https://</small>
                     </div>
                 </div>
+
+                <% if (isPublished && !locked) { %>
+                    <p class="field-hint editor-locked-hint">
+                        The category and image can't be changed after publication &mdash; only the title and text
+                        go through the update approval.
+                    </p>
+                <% } %>
 
                 <figure id="imagePreview" class="image-preview" hidden>
                     <img alt="Main image preview">
