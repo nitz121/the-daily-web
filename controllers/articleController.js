@@ -1,7 +1,20 @@
+const mongoose = require('mongoose');
 const Article = require('../models/Article');
+const { recordView } = require('../services/analyticsService');
+const logger = require('../utils/logger');
+
+// Plain-text summary for the <meta name="description"> tag (SEO)
+function toMetaDescription(html) {
+    const text = (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text.length > 160 ? text.substring(0, 157) + '...' : text;
+}
 
 exports.getArticleById = async (req, res) => {
     try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).send('Article not found');
+        }
+
         const article = await Article.findById(req.params.id).populate('author', 'username');
 
         if (!article) {
@@ -15,9 +28,19 @@ exports.getArticleById = async (req, res) => {
             return res.status(404).send('Article not found or not published');
         }
 
-        // Increment view count (Student 4 may extend this for detailed analytics)
-        article.viewsCount += 1;
-        await article.save();
+        // Staff see the working version of an unpublished article or of an update in progress.
+        // Everyone else always sees the last approved version (title / content).
+        const hasWorkingVersion = article.status !== 'published' || Boolean(article.revisionStatus);
+        const showDraft = Boolean(isStaff && hasWorkingVersion && article.draftTitle);
+
+        // Every visit to the public version counts for the statistics (Impact Analytics, Student 4).
+        // A draft preview is not a public view. The write is not awaited so it never delays the page.
+        if (article.status === 'published' && !showDraft) {
+            article.viewsCount += 1; // the page shows the count including this visit
+            recordView(article._id).catch(err => {
+                logger.error('Failed to record a view', { articleId: String(article._id), error: err.message });
+            });
+        }
 
         // Track viewed article in session (Student 2 viewed/unviewed filter)
         if (!req.session.viewedArticles) {
@@ -28,9 +51,13 @@ exports.getArticleById = async (req, res) => {
             req.session.viewedArticles.push(articleIdStr);
         }
 
-        res.render('article', { article });
+        res.render('article', {
+            article,
+            showDraft,
+            metaDescription: toMetaDescription(showDraft ? article.draftContent : article.content)
+        });
     } catch (error) {
-        console.error(error);
+        logger.error('Article page failed', { articleId: req.params.id, error: error.message });
         res.status(500).send('Server Error');
     }
 };
