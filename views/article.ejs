@@ -8,6 +8,7 @@
     <meta name="description" content="<%= metaDescription || 'News article from The Daily Web' %>">
     
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/comments.css">
 </head>
 <body>
 
@@ -18,7 +19,9 @@
             <div class="nav-links">
                 <a href="/">Home</a>
                 <% if (user) { %>
-                    <% if (user.role === 'editor') { %>
+                    <% if (user.role === 'reporter') { %>
+                        <a href="/reporter-dashboard">My Articles</a>
+                    <% } else if (user.role === 'editor') { %>
                         <a href="/editor-dashboard">Editor Dashboard</a>
                     <% } %>
                     <span class="nav-user-info"><%= user.username %> (<%= user.role %>)</span>
@@ -90,22 +93,40 @@
             </div>
         </article>
 
-        <!-- Comments Section (To be implemented by Student 3) -->
-        <section class="comments-section">
-            <h3>Comments</h3>
-            
-            <form id="add-comment-form" class="comment-form">
-                <textarea name="content" placeholder="Share your thoughts on this article..." required></textarea>
-                <button type="submit" class="btn-comment">Post Comment</button>
-            </form>
+        <!-- Comments Section (Student 3): loaded and posted via AJAX - public/js/comments.js -->
+        <section class="comments-section" id="comments"
+                 data-article-id="<%= article._id %>"
+                 data-can-moderate="<%= user && user.role === 'editor' ? 'true' : 'false' %>">
+            <h3>Comments <span id="comments-count" class="comments-count"></span></h3>
 
-            <div id="comments-container" style="margin-top: 30px;">
-                <p style="color: var(--light-text); font-style: italic;">Comments are currently loading...</p>
-                <!-- AJAX injected comments will appear here -->
-            </div>
+            <% if (article.status === 'published') { %>
+                <form id="add-comment-form" class="comment-form" novalidate>
+                    <label for="comment-author" class="visually-hidden">Your name</label>
+                    <input type="text" id="comment-author" name="authorName" class="comment-name-input"
+                           maxlength="50" placeholder="Your name (optional)" autocomplete="name">
+
+                    <label for="comment-content" class="visually-hidden">Your comment</label>
+                    <textarea id="comment-content" name="content" maxlength="1000"
+                              placeholder="Share your thoughts on this article..." required></textarea>
+
+                    <div class="comment-form-footer">
+                        <span id="comment-char-count" class="comment-char-count">0/1000</span>
+                        <button type="submit" class="btn-comment">Post Comment</button>
+                    </div>
+                    <p id="comment-form-message" class="comment-form-message" role="alert" hidden></p>
+                </form>
+            <% } else { %>
+                <p class="comments-closed">Comments will open once this article is published.</p>
+            <% } %>
+
+            <p id="comments-status" class="comments-status">Loading comments...</p>
+            <ol id="comments-list" class="comments-list"></ol>
+            <button type="button" id="load-more-comments" class="btn-load-more" hidden>Load more comments</button>
         </section>
 
     </main>
+
+    <script src="/js/comments.js"></script>
 
 </body>
 </html>

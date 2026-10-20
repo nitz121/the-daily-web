@@ -18,7 +18,7 @@ npm install
 # 2. Configure environment variables
 cp .env.example .env      # then fill in the values (see below)
 
-# 3. Load the demo data (500+ articles, users, view statistics) - this resets the database
+# 3. Load the demo data (500+ articles, users, view statistics, comments) - this resets the database
 npm run seed
 
 # 4. Start the server
@@ -39,6 +39,9 @@ Open http://localhost:3000
 
 `.env` is git-ignored - never commit passwords or API keys.
 
+`npm run seed:comments` recreates only the demo comments for the articles already in the database
+(users and articles are not touched).
+
 ### Demo users (password for all: `password123`)
 
 | Username | Role |
@@ -55,23 +58,32 @@ Open http://localhost:3000
 the-daily-web/
 ├── server.js                  # Express app: sessions, routes, 404 + central error handler
 ├── seed.js                    # Demo data script (npm run seed)
-├── config/db.js               # MongoDB connection
+├── config/
+│   ├── db.js                  # MongoDB connection
+│   └── categories.js          # Article categories a reporter can choose
 ├── models/                    # Mongoose models (M)
 │   ├── User.js                # Users and roles, bcrypt-hashed passwords
 │   ├── Article.js             # Articles, live vs draft versions, workflow state machine
+│   ├── Comment.js             # Comments (+ device id / IP for the rate limit)
 │   └── ViewStat.js            # View statistics (hourly buckets)
 ├── controllers/               # Request handlers (C)
 │   ├── authController.js      # Login / logout
 │   ├── articleController.js   # Server-rendered article page + view tracking
 │   ├── feedController.js      # Home page, feed API, categories, weather
+│   ├── commentController.js   # Comments API
+│   ├── reporterController.js  # Reporter area: dashboard, editor page, create / autosave API
 │   ├── editorController.js    # Editor area API
 │   └── analyticsController.js # Impact Analytics API
 ├── routes/                    # URL -> controller mapping
-├── middleware/authMiddleware.js  # Role checks (server side)
+├── middleware/
+│   ├── authMiddleware.js      # Role checks (server side)
+│   └── commentRateLimiter.js  # Max 3 comments per minute per device / IP
 ├── services/analyticsService.js  # View collection and chart data preparation
-├── seeders/editorSeeder.js    # Demo data for the editor area and analytics
-├── utils/                     # logger (logs/app.log), HTML sanitizer
-├── views/                     # EJS templates (V)
+├── seeders/
+│   ├── editorSeeder.js        # Demo data for the editor area and analytics
+│   └── commentSeeder.js       # Demo comments (npm run seed:comments)
+├── utils/                     # logger (logs/app.log), HTML sanitizer, plain text -> HTML, regex escaping
+├── views/                     # EJS templates (V), incl. reporter/ and partials/
 └── public/                    # CSS and client-side JavaScript
 ```
 
@@ -89,6 +101,32 @@ the-daily-web/
 - Login for reporters and editors; passwords hashed with bcrypt.
 - Sessions stored in MongoDB (`connect-mongo`), so users stay logged in after a server restart.
 - Every permission is checked on the server (`middleware/authMiddleware.js` + the article state machine).
+
+### Comments
+- Loaded and posted with AJAX. A new comment appears at the top of the list immediately, without reloading the list.
+- **Rate limit**: a device can post at most **3 comments per minute**. Extra attempts get `429 Too Many Requests`
+  with a message, and the UI shows a countdown.
+  - A device is identified by a random id in its session cookie **or** by its IP address, so a new or incognito
+    window on the same machine is blocked too.
+  - The count comes from the comments collection (indexed), so the limit survives a server restart and works
+    across several server instances.
+- Comment text is always rendered as text (no HTML injection). Editors can edit and delete comments.
+
+### Reporter area (`/reporter-dashboard`)
+- The reporter's own articles by stage (In preparation / Pending approval / Returned / Published / All),
+  with counters, title search and "Load more" (20 per page). The editor's note is shown on returned articles.
+- Create a new article, edit drafts, returned articles and published articles, and submit for approval
+  (`PATCH /api/articles/:id/status` - the same state machine as the editor area).
+- Editing a published article goes through `applyEdit`: only the title and content are versioned, so they are saved
+  as an update in `draftTitle` / `draftContent` and readers keep seeing the live version until an editor approves.
+  The category and image of a published article are read-only.
+- **Autosave** (no "Save" button):
+  - Saves 1.5 s after typing stops, and at least every 10 s while typing.
+  - One request at a time, in order, and only when something changed - continuous typing does not flood the server.
+  - Unsaved changes are backed up in `localStorage` and restored after a crash or network failure.
+  - When the tab is closed, the last changes are sent with `fetch(..., { keepalive: true })`.
+  - The work is stored on the server, so it continues on any computer.
+- The reporter writes plain text; the server escapes it and turns blank lines into paragraphs.
 
 ### Editor area (`/editor-dashboard`)
 - All articles filtered by workflow stage (Pending approval / Published / Returned / In preparation / All), title search, 20 per page.
@@ -131,7 +169,8 @@ groups the buckets with `$dateTrunc`, fills empty hours or days with 0, and maps
 point on the time axis, which is the format Chart.js expects.
 
 ### Logs
-Errors and significant events (approvals, returns, deletions, rejected actions) are written as JSON lines
+Errors and significant events (approvals, returns, deletions, rejected actions, articles created / submitted,
+comments posted / moderated, comments blocked by the rate limit) are written as JSON lines
 to `logs/app.log` (`utils/logger.js`).
 
 ---
@@ -143,8 +182,14 @@ to `logs/app.log` (`utils/logger.js`).
 | GET | `/api/articles` | Public feed (search, filters, sort, pagination) |
 | GET | `/api/editor/articles` | Editor: list by stage + search + tab counters |
 | GET / PUT | `/api/editor/articles/:id` | Editor: live vs proposed version / edit |
+| GET | `/api/reporter/articles` | Reporter: own articles by stage + search + tab counters |
+| POST | `/api/articles` | Reporter: create an article (first autosave) |
+| PUT | `/api/articles/:id` | Reporter: autosave the working version |
 | PATCH | `/api/articles/:id/status` | Status change (reporter: submit, editor: approve / return) |
 | DELETE | `/api/articles/:id` | Editor: delete an article with its comments and statistics |
 | GET | `/api/analytics/article/:id` | Chart data (`range=24h\|7d\|30d\|all` or `from`/`to`) |
 | GET | `/api/analytics/top` | Most viewed articles in a range |
 | DELETE | `/api/analytics/article/:id` | Reset an article's statistics |
+| GET | `/api/articles/:id/comments` | Comments of an article (newest first, paginated, search) |
+| POST | `/api/articles/:id/comments` | Add a comment (max 3 per minute per device) |
+| PUT / DELETE | `/api/comments/:id` | Editor: edit / delete a comment |

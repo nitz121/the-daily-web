@@ -4,6 +4,7 @@ const User = require('./models/User');
 const Article = require('./models/Article');
 const ViewStat = require('./models/ViewStat');
 const { applyLifecycle, buildViewStats, insertViewStats } = require('./seeders/editorSeeder');
+const { seedComments } = require('./seeders/commentSeeder');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/thedailyweb';
 
@@ -229,7 +230,7 @@ const seed = async () => {
     const viewStats = buildViewStats(allArticles);
 
     // Save all articles to MongoDB
-    await Article.insertMany(allArticles);
+    const savedArticles = await Article.insertMany(allArticles);
     console.log(`Inserting ${viewStats.length} hourly view buckets...`);
     await insertViewStats(viewStats);
 
@@ -237,11 +238,15 @@ const seed = async () => {
     const publishedCount = await Article.countDocuments({ status: 'published' });
     const totalViews = viewStats.reduce((sum, bucket) => sum + bucket.count, 0);
 
+    // ── Demo comments for published articles (Student 3) ───────────────────
+    const commentCount = await seedComments(savedArticles);
+
     console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published).`);
     console.log(`  Not published yet:                 ${lifecycle.unpublished}`);
     console.log(`  Published with an update in progress: ${lifecycle.updatesInProgress}`);
     console.log(`  Updated several times after publish: ${lifecycle.multiUpdate.length}`);
     console.log(`  View buckets: ${viewStats.length} (${totalViews} views)`);
+    console.log(`  Comments: ${commentCount}`);
     if (lifecycle.demoUpdateAt14) {
         console.log(`  Demo: "${lifecycle.demoUpdateAt14}" got an update approved two days ago at 14:00`);
     }

@@ -47,6 +47,8 @@ app.get('/favicon.ico', (req, res) => res.status(204).end());
 // Routes
 app.use('/auth', require('./routes/auth'));
 app.use('/article', require('./routes/articles'));
+app.use('/', require('./routes/comments'));
+app.use('/', require('./routes/reporter'));
 app.use('/', require('./routes/feed'));
 app.use('/', require('./routes/editor'));
 app.use('/api/analytics', require('./routes/analytics'));

@@ -102,6 +102,7 @@ const articleSchema = new mongoose.Schema({
 
 articleSchema.index({ status: 1, updatedAt: -1 });         // editor dashboard tabs
 articleSchema.index({ revisionStatus: 1, updatedAt: -1 }); // updates waiting for the editor
+articleSchema.index({ author: 1, updatedAt: -1 });         // reporter dashboard: "my articles" (Student 3)
 
 articleSchema.statics.workflowStage = workflowStage;
 
