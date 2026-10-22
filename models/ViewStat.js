@@ -1,13 +1,9 @@
 const mongoose = require('mongoose');
 
 /**
- * View statistics (Student 4) - MongoDB "bucket pattern".
- *
- * One document per article per hour: { articleId, hour, count }.
- * Every view is a single atomic `$inc` on the bucket of the current hour (an upsert creates it),
- * so with thousands of concurrent readers there are no read-modify-write races, the collection
- * grows with the number of hours instead of the number of views, and a one-week chart
- * reads at most 168 small documents through the { articleId, hour } index.
+ * View statistics - one document per article per hour: { articleId, hour, count }.
+ * Each view is one atomic $inc on the current hour's bucket (upsert), so concurrent readers
+ * never overwrite each other and a one-week chart reads at most 168 small documents.
  */
 const viewStatSchema = new mongoose.Schema({
     articleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Article', required: true },

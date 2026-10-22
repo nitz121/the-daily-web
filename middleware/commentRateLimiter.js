@@ -6,16 +6,10 @@ const WINDOW_MS = 60 * 1000;  // 1 minute
 const MAX_COMMENTS = 3;       // max comments per window
 
 /**
- * Comment rate limiter: max 3 comments per minute from the same device.
- *
- * A "device" is identified by:
- *  - deviceId: a random id stored in the visitor's session (cookie). The session
- *    lives in MongoDB, so the id survives a server restart.
- *  - IP address: blocks the same machine even if it opens a new/incognito browser.
- * A request is blocked if EITHER of them already posted 3 comments in the last minute.
- *
- * The count is read from the comments collection itself (indexed query),
- * so the limit is shared by all server instances and survives restarts.
+ * Comment rate limit: max 3 comments per minute from the same device.
+ * A device = a random deviceId in the session cookie OR the IP address, so a new / incognito
+ * browser on the same machine is blocked too. The count comes from the comments collection,
+ * so the limit survives a server restart and is shared by all server instances.
  */
 module.exports = async (req, res, next) => {
     try {

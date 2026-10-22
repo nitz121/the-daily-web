@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const ViewStat = require('../models/ViewStat');
 
 /**
- * Demo data for the editor area and Impact Analytics (Student 4)
+ * Demo data for the editor area and Impact Analytics
  *  - applyLifecycle(): publication data, articles updated several times after publication,
  *    published articles with an update in progress, never-published articles
  *  - buildViewStats(): hourly view buckets that follow each article's history

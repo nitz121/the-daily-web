@@ -1,7 +1,6 @@
 /**
- * The Daily Web - Editor Dashboard Script (Student 4)
- * Article workflow for the editor (review / edit / approve / return / delete) and the
- * Impact Analytics chart: views over time with a marker for every approved update (Chart.js).
+ * Editor dashboard: article workflow (review / edit / approve / return / delete) and the
+ * Impact Analytics chart - views over time with a marker for every approval (Chart.js).
  */
 
 document.addEventListener('DOMContentLoaded', () => {

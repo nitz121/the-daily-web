@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// Render Login Page
+// Login page
 router.get('/login', authController.getLogin);
 
-// Handle Login Form
+// Login form submit
 router.post('/login', authController.postLogin);
 
-// Handle Logout
+// Logout
 router.get('/logout', authController.logout);
 
 module.exports = router;

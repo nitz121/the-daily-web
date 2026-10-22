@@ -1,8 +1,7 @@
 /**
- * The article page renders article content as raw HTML (<%- %>).
- * Reporters write plain text, so the server converts it to safe HTML:
- * every special character is escaped (a reporter can't inject <script>),
- * an empty line starts a new paragraph and a single line break becomes <br>.
+ * Reporters write plain text, but the article page renders content as HTML (<%- %>).
+ * textToHtml escapes every special character (no <script> injection) and turns blank lines
+ * into <p> paragraphs and single line breaks into <br>.
  */
 
 function escapeHtml(text) {

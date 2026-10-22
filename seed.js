@@ -71,7 +71,7 @@ const seed = async () => {
             createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8)
         },
         {
-            // Published article with an update waiting for approval (Student 4):
+            // Published article with an update waiting for approval:
             // readers keep seeing title/content until the editor approves the draft fields
             title: 'Upcoming Music Festival Preview',
             content: '<p>This is the original published version previewing the summer lineup.</p>',
@@ -100,7 +100,7 @@ const seed = async () => {
         }
     ];
 
-    // ── Generate 500+ Articles for Project Defense (Page 7 requirement) ─────
+    // ── Generate 500+ demo articles ─────────────────────────────────────────
     console.log('Generating 500+ demonstration articles across categories...');
 
     const categories = ['Technology', 'Sports', 'Local News', 'Entertainment', 'Environment', 'Economy', 'Science', 'Health'];
@@ -224,7 +224,7 @@ const seed = async () => {
         });
     }
 
-    // ── Publication history, updates & view statistics (Student 4) ─────────
+    // ── Publication history, updates & view statistics ───────────────────────
     const allArticles = [...coreArticles, ...generatedArticles];
     const lifecycle = applyLifecycle(allArticles, editor);
     const viewStats = buildViewStats(allArticles);
@@ -238,7 +238,7 @@ const seed = async () => {
     const publishedCount = await Article.countDocuments({ status: 'published' });
     const totalViews = viewStats.reduce((sum, bucket) => sum + bucket.count, 0);
 
-    // ── Demo comments for published articles (Student 3) ───────────────────
+    // ── Demo comments for published articles ───────────────────────────────
     const commentCount = await seedComments(savedArticles);
 
     console.log(`\nSeed complete! Total articles: ${totalCount} (${publishedCount} published).`);

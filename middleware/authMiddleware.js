@@ -19,7 +19,7 @@ exports.ensureEditor = (req, res, next) => {
     res.status(403).send('Access Denied: Editors only');
 };
 
-// JSON versions for AJAX endpoints (Student 4) - an API call gets a JSON error instead of a redirect / HTML
+// JSON versions for AJAX endpoints: an API call gets a JSON error instead of a redirect / HTML page
 exports.ensureEditorApi = (req, res, next) => {
     if (!req.session.user) {
         return res.status(401).json({ success: false, message: 'Please log in first' });
@@ -40,10 +40,9 @@ exports.ensureStaffApi = (req, res, next) => {
     next();
 };
 
-// Allows only the given roles (e.g. requireRole('editor')).
-// Works for both pages and the JSON API: API calls (/api/...) get a JSON
-// 401/403 response, pages get a redirect to login or a 403 page.
-// The role is read from the server-side session, so it cannot be changed from the browser.
+// Allows only the given roles, e.g. requireRole('reporter').
+// API calls (/api/...) get a JSON 401/403; pages get a redirect to login or a 403 page.
+// The role comes from the server-side session, so it can't be changed in the browser.
 exports.requireRole = (...roles) => (req, res, next) => {
     const user = req.session.user;
     const isApi = req.originalUrl.startsWith('/api/');

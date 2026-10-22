@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session Configuration (Survives Server Restart)
+// Sessions are stored in MongoDB, so a logged-in user stays logged in after a server restart
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
@@ -35,13 +35,13 @@ app.use(session({
     }
 }));
 
-// Global variables for templates
+// Make the logged-in user available to every EJS view
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
 });
 
-// Ignore favicon requests to prevent 404 errors in console
+// There is no favicon - answer 204 instead of a 404
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // Routes
@@ -61,7 +61,7 @@ app.use((req, res) => {
     res.status(404).send('Page not found');
 });
 
-// Central error handler - logs the error and answers instead of crashing (e.g. malformed JSON body)
+// Central error handler: logs the error and answers instead of crashing (e.g. invalid JSON body)
 app.use((err, req, res, next) => {
     const status = err.status || err.statusCode || 500;
     logger.error('Request failed', {

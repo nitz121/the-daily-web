@@ -6,9 +6,8 @@ const commentSchema = new mongoose.Schema({
     authorName: { type: String, trim: true, maxlength: 50, default: 'Guest' },
     content: { type: String, required: true, trim: true, maxlength: 1000 },
 
-    // Used by the comment rate limiter (max 3 comments per minute from the same device).
-    // deviceId is a random id stored in the visitor's session cookie.
-    // Never sent back to the client.
+    // Used only by the comment rate limiter (deviceId = random id from the session cookie).
+    // Never sent to the client.
     deviceId: { type: String, required: true },
     ipAddress: { type: String }
 }, { timestamps: true });

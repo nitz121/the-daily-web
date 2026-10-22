@@ -5,7 +5,7 @@ const escapeRegex = require('../utils/escapeRegex');
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50; // one request can't ask for the whole collection
 
-// In-memory cache for weather data (15 minutes cache to meet the project requirement)
+// In-memory weather cache - the data shown may be up to 15 minutes old (project requirement)
 let weatherCache = {
     data: null,
     lastFetched: 0
@@ -13,7 +13,7 @@ let weatherCache = {
 const WEATHER_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 /**
- * Helper to strip HTML tags for card excerpt/summary
+ * Strip HTML tags for the card summary
  */
 function stripHtml(html) {
     if (!html) return '';
@@ -21,7 +21,7 @@ function stripHtml(html) {
 }
 
 /**
- * Render the main homepage (Student 2)
+ * Home page: categories for the filter pills + trending sidebar (the feed is loaded with AJAX)
  */
 exports.renderHomePage = async (req, res) => {
     try {
@@ -50,8 +50,8 @@ exports.renderHomePage = async (req, res) => {
  */
 exports.getArticles = async (req, res) => {
     try {
-        // page >= 1 (a negative page made the skip negative and crashed the query);
-        // an invalid limit falls back to the default, a valid one is capped at MAX_PAGE_SIZE
+        // page >= 1 (a negative skip is invalid); an invalid limit falls back to the default,
+        // a valid one is capped at MAX_PAGE_SIZE
         const page = Math.max(parseInt(req.query.page) || 1, 1);
         const requestedLimit = parseInt(req.query.limit);
         const limit = requestedLimit > 0 ? Math.min(requestedLimit, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
@@ -69,9 +69,7 @@ exports.getArticles = async (req, res) => {
             filter.category = category;
         }
 
-        // 2. Search Filter (searches title or content)
-        // The text is escaped, so characters like "(" or "+" are searched literally
-        // (unescaped, "(" crashed the query and "a+b" matched "ab", "aab"...)
+        // 2. Search in title or content - escaped, so "(" or "+" are searched literally
         if (search) {
             const pattern = escapeRegex(search);
             filter.$or = [
@@ -170,9 +168,8 @@ exports.getCategories = async (req, res) => {
 };
 
 /**
- * API: Weather widget proxy with 15-minute server-side caching
+ * API: weather for the sidebar widget (OpenWeatherMap, key from .env), cached for 15 minutes
  * GET /api/weather
- * Exclusively uses OpenWeatherMap API (OPENWEATHER_API_KEY from .env)
  */
 exports.getWeather = async (req, res) => {
     try {

@@ -1,7 +1,6 @@
 /**
- * The Daily Web - Reporter Dashboard (Student 3)
- * Lists the logged-in reporter's articles via AJAX with status tabs,
- * title search, "Load more" pagination, and "Submit for approval" actions.
+ * Reporter dashboard: the reporter's own articles via AJAX - stage tabs, title search,
+ * "Load more" and "Submit for approval".
  */
 
 document.addEventListener('DOMContentLoaded', () => {

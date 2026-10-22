@@ -19,14 +19,14 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Hash password before saving
+// Hash the password (bcrypt) whenever it is set or changed
 userSchema.pre('save', async function() {
     if (!this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Compare password
+// Check a login password against the stored hash
 userSchema.methods.matchPassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };

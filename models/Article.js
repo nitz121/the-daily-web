@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const sanitizeHtml = require('../utils/sanitizeHtml');
 
-// ── Article lifecycle (Student 4) ──────────────────────────────────────────
+// ── Article lifecycle ──────────────────────────────────────────────────────
 // `status` is the lifecycle until the first publication. Once published it stays 'published',
 // so the public site (which shows status 'published') keeps showing the last approved version.
 // An update of a published article has its own lifecycle in `revisionStatus`
@@ -95,14 +95,14 @@ const articleSchema = new mongoose.Schema({
     // Editor's note when returning an article (or an update) for corrections
     editorNote: { type: String, maxlength: EDITOR_NOTE_MAX },
 
-    // Publication data (Student 4)
+    // Publication data
     publishedAt: { type: Date }, // first publication
     publishHistory: { type: [publishRecordSchema], default: [] }
 }, { timestamps: true });
 
 articleSchema.index({ status: 1, updatedAt: -1 });         // editor dashboard tabs
 articleSchema.index({ revisionStatus: 1, updatedAt: -1 }); // updates waiting for the editor
-articleSchema.index({ author: 1, updatedAt: -1 });         // reporter dashboard: "my articles" (Student 3)
+articleSchema.index({ author: 1, updatedAt: -1 });         // reporter dashboard: "my articles"
 
 articleSchema.statics.workflowStage = workflowStage;
 

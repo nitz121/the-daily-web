@@ -1,7 +1,6 @@
 /**
- * The Daily Web - Feed & Infinite Scroll Script (Student 2)
- * Handles AJAX article feed, infinite scrolling, real-time search,
- * category filtering, viewed/unviewed tracking, sorting, and weather widget.
+ * Home page feed: AJAX article list with infinite scroll, live search, category and
+ * read / unread filters, sorting, and the weather widget.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -80,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getCategoryFallbackImage(category) {
-        // High quality thematic fallback placeholder images by category
+        // Placeholder image by category, for articles without an image
         const cat = (category || '').toLowerCase();
         if (cat.includes('tech')) return 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80';
         if (cat.includes('sport')) return 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&auto=format&fit=crop&q=80';
@@ -388,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             } else {
-                // If OpenWeatherMap key is still propagating/activating
+                // The weather service failed (e.g. missing / inactive API key) - show its message
                 const msg = (result && result.message) ? result.message : 'OpenWeatherMap API connecting...';
                 weatherContent.innerHTML = `
                     <div style="padding: 10px 0; font-size: 0.85rem; color: #666;">

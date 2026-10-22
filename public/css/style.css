@@ -25,7 +25,7 @@ body {
     line-height: 1.6;
 }
 
-/* ===== NAVBAR (SHARED FOR ALL STUDENTS) ===== */
+/* ===== NAVBAR (SHARED BY ALL PAGES) ===== */
 .site-header {
     background-color: var(--primary-color);
     color: white;
@@ -85,7 +85,7 @@ body {
 
 
 /* ========================================= */
-/*               LOGIN PAGE (STUDENT 1)      */
+/*                LOGIN PAGE                 */
 /* ========================================= */
 .login-page-wrapper {
     display: flex;
@@ -194,7 +194,7 @@ body {
 
 
 /* ========================================= */
-/*             ARTICLE PAGE (STUDENT 1)      */
+/*               ARTICLE PAGE                */
 /* ========================================= */
 .article-page {
     max-width: 800px;
@@ -350,7 +350,7 @@ body {
 }
 
 /* ========================================= */
-/*       HOME PAGE & FEED (STUDENT 2)        */
+/*             HOME PAGE & FEED              */
 /* ========================================= */
 
 .nav-link-active {
@@ -1043,7 +1043,7 @@ body {
 }
 
 /* ========================================= */
-/*        EDITOR DASHBOARD (STUDENT 4)       */
+/*             EDITOR DASHBOARD              */
 /* ========================================= */
 .editor-dashboard {
     padding-top: 30px;

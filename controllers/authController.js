@@ -21,7 +21,7 @@ exports.postLogin = async (req, res) => {
             return res.render('login', { error: 'Invalid username or password' });
         }
 
-        // Save session
+        // Keep the user in the server-side session (the browser only holds the session id)
         req.session.user = {
             id: user._id,
             username: user.username,
@@ -31,14 +31,13 @@ exports.postLogin = async (req, res) => {
         // Redirect based on role
         let target = '/';
         if (user.role === 'reporter') {
-            target = '/reporter-dashboard'; // Student 3
+            target = '/reporter-dashboard';
         } else if (user.role === 'editor') {
-            target = '/editor-dashboard'; // Student 4 will build this
+            target = '/editor-dashboard';
         }
 
-        // Wait until the session is written to MongoDB before redirecting.
-        // Otherwise the browser may request the next page before the session
-        // exists in the store and the user is sent back to the login page.
+        // Save the session to MongoDB before redirecting - otherwise the next request may arrive
+        // before the session exists and the user is sent back to the login page.
         req.session.save((err) => {
             if (err) {
                 console.error(err);
