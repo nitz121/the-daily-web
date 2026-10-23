@@ -51,6 +51,7 @@ app.use('/', require('./routes/comments'));
 app.use('/', require('./routes/reporter'));
 app.use('/', require('./routes/feed'));
 app.use('/', require('./routes/editor'));
+app.use('/', require('./routes/users'));
 app.use('/api/analytics', require('./routes/analytics'));
 
 // 404 - no route matched
