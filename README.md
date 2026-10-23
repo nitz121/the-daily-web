@@ -136,6 +136,9 @@ the-daily-web/
 - **Review** - side-by-side *Currently published* vs *Proposed update*, with "Title changed / Content changed" markers.
 - **Approve & publish**, **Return for corrections** (a note is required), **Edit** by the editor, **Delete**.
 - Every action updates the table without reloading the page.
+- **Users** - user administration on top of the Users API: search, add a user, change username / role / password,
+  delete. An editor can't delete their own account or change their own role, and a user who still owns articles
+  can't be deleted (all enforced by the server too).
 
 ### Article lifecycle
 `status` is the lifecycle until the first publication. After that the article stays `published`
