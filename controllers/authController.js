@@ -19,7 +19,9 @@ exports.postLogin = async (req, res) => {
     }
     
     try {
-        const user = await User.findOne({ username });
+        // sanitizeFilter on this query only: an object with $-keys would be matched literally.
+        // (Not global - it would also break the app's own $gte / $regex / $in filters.)
+        const user = await User.findOne({ username }).setOptions({ sanitizeFilter: true });
         if (!user) {
             logger.warn('Failed login: unknown username', { username, ip: req.ip });
             return res.render('login', { error: 'Invalid username or password' });

@@ -99,6 +99,8 @@ the-daily-web/
 
 ### Users & security
 - Login for reporters and editors; passwords hashed with bcrypt.
+- Login is protected against NoSQL injection: non-string credentials (e.g. `username[$ne]=x`) are rejected,
+  and the login query runs with Mongoose `sanitizeFilter`.
 - Sessions stored in MongoDB (`connect-mongo`), so users stay logged in after a server restart.
 - Every permission is checked on the server (`middleware/authMiddleware.js` + the article state machine).
 - Editor-only user administration API: list/search, create, update role or password, and delete users with no authored articles. Password hashes are never returned.
