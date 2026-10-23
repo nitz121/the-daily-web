@@ -1874,3 +1874,44 @@ body {
         gap: 12px;
     }
 }
+
+/* Users administration (editor dashboard) */
+.users-message {
+    margin-bottom: 16px;
+}
+
+.new-user-form {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.new-user-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.form-field {
+    flex: 1 1 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.users-table .form-input {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+
+.users-table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .users-table td[data-label] .form-input {
+        max-width: 60%;
+    }
+}
