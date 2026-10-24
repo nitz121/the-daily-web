@@ -58,6 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Formatting Helpers ──────────────────────────────────────────────────
+    // Every text value from the server is escaped before it goes into innerHTML,
+    // so a title like "<img src=x onerror=...>" is shown as text instead of running.
+    function escapeHtml(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function formatDate(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr);
@@ -83,30 +94,34 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderArticleCard(article) {
         const viewedList = getViewedArticles();
         const isViewed = viewedList.includes(article._id);
-        const imageUrl = article.imageUrl || getCategoryFallbackImage(article.category);
+        const imageUrl = escapeHtml(article.imageUrl || getCategoryFallbackImage(article.category));
+        const id = escapeHtml(article._id);
+        const title = escapeHtml(article.title);
 
         const card = document.createElement('article');
         card.className = `article-card ${isViewed ? 'is-read' : 'is-unread'}`;
         card.dataset.id = article._id;
 
+        // The summary is not escaped again: the server strips every tag from it (stripHtml),
+        // and it keeps the article's HTML entities (e.g. &#39;) so they display correctly.
         card.innerHTML = `
-            <a href="/article/${article._id}" class="card-image-link" tabindex="-1" aria-hidden="true">
-                <img src="${imageUrl}" alt="${article.title}" class="card-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80'">
-                <span class="card-category-badge">${article.category}</span>
+            <a href="/article/${id}" class="card-image-link" tabindex="-1" aria-hidden="true">
+                <img src="${imageUrl}" alt="${title}" class="card-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80'">
+                <span class="card-category-badge">${escapeHtml(article.category)}</span>
                 ${isViewed ? '<span class="card-read-badge">✓ Read</span>' : ''}
             </a>
             <div class="card-body">
                 <div class="card-meta-top">
-                    <span class="card-author">By <strong>${article.author}</strong></span>
-                    <time class="card-date" datetime="${article.createdAt}">${formatDate(article.createdAt)}</time>
+                    <span class="card-author">By <strong>${escapeHtml(article.author)}</strong></span>
+                    <time class="card-date" datetime="${escapeHtml(article.createdAt)}">${formatDate(article.createdAt)}</time>
                 </div>
                 <h3 class="card-title">
-                    <a href="/article/${article._id}" class="card-title-link">${article.title}</a>
+                    <a href="/article/${id}" class="card-title-link">${title}</a>
                 </h3>
                 <p class="card-summary">${article.summary}</p>
                 <div class="card-footer">
-                    <span class="card-views" title="Total Views">👁️ ${article.viewsCount} views</span>
-                    <a href="/article/${article._id}" class="card-read-more">Read full story &rarr;</a>
+                    <span class="card-views" title="Total Views">👁️ ${escapeHtml(article.viewsCount)} views</span>
+                    <a href="/article/${id}" class="card-read-more">Read full story &rarr;</a>
                 </div>
             </div>
         `;
@@ -358,15 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 weatherContent.innerHTML = `
                     <div class="weather-main">
-                        <span class="weather-icon">${w.icon}</span>
+                        <span class="weather-icon">${escapeHtml(w.icon)}</span>
                         <div class="weather-temp-info">
-                            <span class="weather-temp">${w.temperature}&deg;C</span>
-                            <span class="weather-condition">${w.condition}</span>
+                            <span class="weather-temp">${escapeHtml(w.temperature)}&deg;C</span>
+                            <span class="weather-condition">${escapeHtml(w.condition)}</span>
                         </div>
                     </div>
                     <div class="weather-details">
-                        <span>📍 ${w.city}</span>
-                        <span>💨 Wind: ${w.windSpeed} km/h</span>
+                        <span>📍 ${escapeHtml(w.city)}</span>
+                        <span>💨 Wind: ${escapeHtml(w.windSpeed)} km/h</span>
                     </div>
                     <div class="weather-status">
                         <small>${cacheText} (15m cache)</small>
@@ -378,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 weatherContent.innerHTML = `
                     <div style="padding: 10px 0; font-size: 0.85rem; color: #666;">
                         <strong style="color: var(--primary-color);">OpenWeatherMap</strong>
-                        <p style="margin-top: 5px;">${msg}</p>
+                        <p style="margin-top: 5px;">${escapeHtml(msg)}</p>
                     </div>
                 `;
             }

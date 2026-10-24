@@ -1,5 +1,9 @@
 const Article = require('../models/Article');
 const mongoose = require('mongoose');
+const escapeRegex = require('../utils/escapeRegex');
+
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50; // one request can't ask for the whole collection
 
 // In-memory cache for weather data (15 minutes cache to meet the project requirement)
 let weatherCache = {
@@ -46,10 +50,14 @@ exports.renderHomePage = async (req, res) => {
  */
 exports.getArticles = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        // page >= 1 (a negative page made the skip negative and crashed the query);
+        // an invalid limit falls back to the default, a valid one is capped at MAX_PAGE_SIZE
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const requestedLimit = parseInt(req.query.limit);
+        const limit = requestedLimit > 0 ? Math.min(requestedLimit, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
         const category = req.query.category || 'all';
-        const search = req.query.search ? req.query.search.trim() : '';
+        // typeof check: "?search=a&search=b" arrives as an array
+        const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 100) : '';
         const sort = req.query.sort || 'date_desc';
         const viewed = req.query.viewed || 'all'; // 'all', 'viewed', 'unviewed'
 
@@ -62,10 +70,13 @@ exports.getArticles = async (req, res) => {
         }
 
         // 2. Search Filter (searches title or content)
+        // The text is escaped, so characters like "(" or "+" are searched literally
+        // (unescaped, "(" crashed the query and "a+b" matched "ab", "aab"...)
         if (search) {
+            const pattern = escapeRegex(search);
             filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { content: { $regex: search, $options: 'i' } }
+                { title: { $regex: pattern, $options: 'i' } },
+                { content: { $regex: pattern, $options: 'i' } }
             ];
         }
 
