@@ -29,10 +29,8 @@ const SAMPLE_COMMENTS = [
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 /**
- * Creates demo comments for published articles (Student 3).
- * Clears the existing comments first, then gives about 60% of the published
- * articles 1-8 comments each, dated between the article's creation and now.
- * Returns the number of comments created.
+ * Demo comments: clears the existing comments, then gives ~60% of the published articles
+ * 1-8 comments each, dated between the article's creation and now. Returns the count.
  */
 async function seedComments(articles) {
     await Comment.deleteMany({});

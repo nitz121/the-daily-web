@@ -6,11 +6,9 @@ const escapeRegex = require('../utils/escapeRegex');
 const logger = require('../utils/logger');
 
 /**
- * Reporter area (Student 3)
- * The reporter's dashboard and editor page, and the create / autosave API.
- * All workflow rules come from the Article model (Student 4): canEditBy, applyEdit,
- * workflowStage and TRANSITIONS. Submitting for approval uses the shared
- * PATCH /api/articles/:id/status endpoint (editorController.changeStatus).
+ * Reporter area: dashboard and editor pages, and the create / autosave API.
+ * Workflow rules come from the Article model (canEditBy, applyEdit, workflowStage, TRANSITIONS).
+ * Submitting for approval uses the shared PATCH /api/articles/:id/status (editorController).
  */
 
 const PAGE_SIZE = 20;
@@ -294,9 +292,8 @@ exports.createArticle = async (req, res) => {
 };
 
 /**
- * Autosave of the reporter's working version.
- * applyEdit() (Article model) never touches the live title / content: the first edit of a
- * published article opens an update, and readers keep seeing the published version.
+ * Autosave of the reporter's working version. applyEdit() never changes the live title /
+ * content - editing a published article opens an update and readers keep the published version.
  * PUT /api/articles/:id   body: { title?, category?, imageUrl?, content? }
  */
 exports.updateArticle = async (req, res) => {

@@ -33,8 +33,8 @@ exports.getArticleById = async (req, res) => {
         const hasWorkingVersion = article.status !== 'published' || Boolean(article.revisionStatus);
         const showDraft = Boolean(isStaff && hasWorkingVersion && article.draftTitle);
 
-        // Every visit to the public version counts for the statistics (Impact Analytics, Student 4).
-        // A draft preview is not a public view. The write is not awaited so it never delays the page.
+        // Every visit to the public version is counted for the statistics (a staff draft preview is not).
+        // The write is not awaited, so it never delays the page.
         if (article.status === 'published' && !showDraft) {
             article.viewsCount += 1; // the page shows the count including this visit
             recordView(article._id).catch(err => {
@@ -42,7 +42,7 @@ exports.getArticleById = async (req, res) => {
             });
         }
 
-        // Track viewed article in session (Student 2 viewed/unviewed filter)
+        // Remember viewed articles in the session (for the feed's read / unread filter)
         if (!req.session.viewedArticles) {
             req.session.viewedArticles = [];
         }

@@ -1,18 +1,8 @@
 /**
- * The Daily Web - Article Editor with Background Autosave (Student 3)
- *
- * The reporter never has to click "Save":
- *  - Debounce: changes are saved 1.5s after the reporter stops typing, and at
- *    least every 10s while typing non-stop (max wait).
- *  - Save queue: only one save request runs at a time. Saves are chained one
- *    after the other, so an older request can never overwrite newer text.
- *  - Dirty check: nothing is sent if the fields didn't change since the last save.
- *  - Local backup: unsaved changes are also kept in localStorage. If the network
- *    or the browser fails, they are restored on the next visit (when newer than
- *    the server copy) and saved.
- *  - Leaving the page: pending changes are sent with fetch({ keepalive: true }),
- *    which lets the request finish even after the tab is closed.
- * The server copy is the source of truth, so work continues on any computer.
+ * Article editor with background autosave - the reporter never clicks "Save".
+ * Saves 1.5s after typing stops (at least every 10s while typing), one request at a time and
+ * only when something changed. Unsaved changes are also kept in localStorage (restored after a
+ * crash / network failure) and sent with fetch keepalive when the tab is closed.
  */
 
 document.addEventListener('DOMContentLoaded', () => {

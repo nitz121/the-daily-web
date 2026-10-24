@@ -2,9 +2,8 @@ const Article = require('../models/Article');
 const ViewStat = require('../models/ViewStat');
 
 /**
- * Impact Analytics service (Student 4)
- * Collects article views into hourly buckets and turns them into chart-ready data:
- * a continuous time axis, views per bucket, editor approval markers and before/after impact.
+ * Impact Analytics: collects views into hourly buckets and turns them into chart data -
+ * a continuous time axis, views per point, editor approval markers and before/after impact.
  */
 
 const HOUR_MS = 60 * 60 * 1000;

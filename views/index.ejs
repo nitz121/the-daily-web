@@ -30,11 +30,11 @@
         </nav>
     </header>
 
-    <!-- Sub-header Date & Ticker Bar -->
+    <!-- Sub-header: today's date + live indicator -->
     <section class="top-bar">
         <div class="container top-bar-content">
             <div class="date-display" id="currentDateDisplay">
-                <!-- Injected via JS or localized date -->
+                <!-- Rendered on the server -->
                 <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
             </div>
             <div class="live-indicator">
@@ -101,7 +101,7 @@
                 <% } %>
             </div>
 
-            <!-- Active filter chips & results count -->
+            <!-- Results count + "Reset Filters" button -->
             <div class="active-status-bar" id="activeStatusBar">
                 <span id="resultsCountText" class="results-count">Loading articles...</span>
                 <button type="button" id="resetFiltersBtn" class="btn-reset-filters" style="display: none;">
@@ -121,7 +121,7 @@
                     <!-- Injected dynamically via AJAX (public/js/feed.js) -->
                 </div>
 
-                <!-- Skeletons / Loading Indicator -->
+                <!-- Loading indicator -->
                 <div id="loadingIndicator" class="loading-indicator">
                     <div class="spinner"></div>
                     <span>Fetching latest stories...</span>
@@ -147,7 +147,7 @@
             <!-- Sidebar -->
             <aside class="feed-sidebar" aria-label="Sidebar widgets">
                 
-                <!-- Live Weather Widget (Open-Meteo Integration with 15-min cache) -->
+                <!-- Weather widget (OpenWeatherMap, cached on the server for 15 minutes) -->
                 <div class="sidebar-widget weather-widget" id="weatherWidget">
                     <div class="widget-header">
                         <h4>Local Weather</h4>
@@ -210,7 +210,7 @@
         </div>
     </footer>
 
-    <!-- Client-side Feed Script (Student 2) -->
+    <!-- Feed script: AJAX feed, search / filters, infinite scroll, weather -->
     <script src="/js/feed.js"></script>
 
 </body>

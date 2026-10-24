@@ -1,9 +1,7 @@
 /**
- * The Daily Web - User Administration in the Editor Dashboard (Student 4)
- * UI for the editor-only Users API (Student 1): list / search, create,
- * change username, role or password, and delete users.
- * Every rule is enforced by the server as well (role check, validation,
- * no self-delete, no deleting a user who still owns articles).
+ * User administration in the editor dashboard: list / search, create, change username,
+ * role or password, and delete users (editor-only Users API). The server enforces every
+ * rule as well (role check, validation, no self-delete, no deleting a user who owns articles).
  */
 
 document.addEventListener('DOMContentLoaded', () => {

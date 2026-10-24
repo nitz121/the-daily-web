@@ -4,9 +4,8 @@ const analytics = require('../services/analyticsService');
 const logger = require('../utils/logger');
 
 /**
- * Editor area (Student 4)
- * Lists every article by status, review of submitted content (live vs proposed version),
- * editing by the editor, approve / return / delete, and the shared status-change endpoint.
+ * Editor area: all articles by stage, review (live vs proposed version), editing,
+ * approve / return / delete, and the status-change endpoint shared with reporters.
  */
 
 const PAGE_SIZE = 20;
@@ -297,8 +296,7 @@ exports.deleteArticle = async (req, res) => {
         const article = await Article.findByIdAndDelete(req.params.id);
         if (!article) return invalidId(res);
 
-        // Remove everything that belongs to the article. The comments collection is accessed
-        // directly so this works regardless of when the Comment model is added.
+        // Also remove the article's view statistics and comments
         const [stats, comments] = await Promise.all([
             analytics.deleteArticleStats(article._id),
             mongoose.connection.collection('comments').deleteMany({ articleId: article._id })

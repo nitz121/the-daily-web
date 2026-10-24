@@ -4,7 +4,7 @@ const analytics = require('../services/analyticsService');
 const logger = require('../utils/logger');
 
 /**
- * Impact Analytics API (Student 4) - editors only
+ * Impact Analytics API (editors only)
  */
 
 // ── GET /api/analytics/article/:id?range=24h|7d|30d|all  or  ?from=&to= ────

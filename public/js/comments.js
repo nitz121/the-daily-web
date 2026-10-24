@@ -1,8 +1,6 @@
 /**
- * The Daily Web - Article Comments (Student 3)
- * Loads the article's comments via AJAX, posts new comments without reloading
- * the page (the new comment is added at the top of the list), shows the server's
- * rate-limit message with a countdown, and lets editors edit / delete comments.
+ * Article comments: loaded with AJAX, a new comment is added at the top without reloading,
+ * the rate-limit message is shown with a countdown, and editors can edit / delete comments.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
