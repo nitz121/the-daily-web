@@ -26,7 +26,7 @@
 
         <header class="dashboard-header">
             <h1 class="dashboard-title">Editor Dashboard</h1>
-            <p class="dashboard-subtitle">Review submissions, manage every article and follow the impact of your updates.</p>
+            <p class="dashboard-subtitle">Review submissions, manage every article and user, and follow the impact of your updates.</p>
         </header>
 
         <!-- Result of the last action (approve / return / delete ...) -->
@@ -202,6 +202,79 @@
                 </div>
             </div>
         </section>
+
+        <!-- ── Users (editor-only user administration) ───────────────────── -->
+        <section class="sidebar-widget dashboard-panel" id="usersPanel" aria-labelledby="usersHeading"
+                 data-current-user-id="<%= user.id %>">
+            <div class="widget-header">
+                <h2 id="usersHeading">Users</h2>
+                <span class="panel-hint" id="usersSummary"></span>
+            </div>
+
+            <!-- Result of the last user action -->
+            <div id="usersMessage" class="dashboard-message users-message" role="status" aria-live="polite" hidden></div>
+
+            <form id="newUserForm" class="new-user-form" novalidate>
+                <h3 class="subheading">Add a user</h3>
+                <div class="new-user-fields">
+                    <div class="form-field">
+                        <label for="newUsername" class="form-label">Username</label>
+                        <input type="text" id="newUsername" class="form-input" maxlength="50" autocomplete="off" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="newPassword" class="form-label">Password</label>
+                        <input type="password" id="newPassword" class="form-input" minlength="8" maxlength="128"
+                               autocomplete="new-password" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="newRole" class="form-label">Role</label>
+                        <select id="newRole" class="form-input">
+                            <option value="reporter">Reporter</option>
+                            <option value="editor">Editor</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="createUserBtn" class="btn-success">Add user</button>
+                </div>
+                <p class="field-hint">Passwords need 8&ndash;128 characters. They are stored as bcrypt hashes and are never shown.</p>
+            </form>
+
+            <div class="dashboard-toolbar">
+                <div class="search-box-wrapper dashboard-search">
+                    <span class="search-icon">🔍</span>
+                    <input type="search" id="userSearch" class="search-input" placeholder="Search by username..."
+                           aria-label="Search users by username" autocomplete="off" maxlength="50">
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="editor-table users-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Username</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">New password</th>
+                            <th scope="col">Created</th>
+                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Rows injected via AJAX (public/js/users-admin.js) -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="usersLoading" class="loading-indicator" hidden>
+                <div class="spinner"></div>
+                <span>Loading users...</span>
+            </div>
+
+            <div id="usersEmpty" class="state-message" hidden>
+                <div class="state-icon">👤</div>
+                <h3>No users found</h3>
+                <p>No username matches this search.</p>
+            </div>
+        </section>
     </main>
 
     <!-- ── Review dialog ─────────────────────────────────────────────────── -->
@@ -288,6 +361,7 @@
     <!-- Chart.js (Impact Analytics chart) + dashboard script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
     <script src="/js/editor-dashboard.js"></script>
+    <script src="/js/users-admin.js"></script>
 
 </body>
 </html>

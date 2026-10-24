@@ -99,8 +99,11 @@ the-daily-web/
 
 ### Users & security
 - Login for reporters and editors; passwords hashed with bcrypt.
+- Login is protected against NoSQL injection: non-string credentials (e.g. `username[$ne]=x`) are rejected,
+  and the login query runs with Mongoose `sanitizeFilter`.
 - Sessions stored in MongoDB (`connect-mongo`), so users stay logged in after a server restart.
 - Every permission is checked on the server (`middleware/authMiddleware.js` + the article state machine).
+- Editor-only user administration API: list/search, create, update role or password, and delete users with no authored articles. Password hashes are never returned.
 
 ### Comments
 - Loaded and posted with AJAX. A new comment appears at the top of the list immediately, without reloading the list.
@@ -133,6 +136,9 @@ the-daily-web/
 - **Review** - side-by-side *Currently published* vs *Proposed update*, with "Title changed / Content changed" markers.
 - **Approve & publish**, **Return for corrections** (a note is required), **Edit** by the editor, **Delete**.
 - Every action updates the table without reloading the page.
+- **Users** - user administration on top of the Users API: search, add a user, change username / role / password,
+  delete. An editor can't delete their own account or change their own role, and a user who still owns articles
+  can't be deleted (all enforced by the server too).
 
 ### Article lifecycle
 `status` is the lifecycle until the first publication. After that the article stays `published`
@@ -190,6 +196,8 @@ to `logs/app.log` (`utils/logger.js`).
 | GET | `/api/analytics/article/:id` | Chart data (`range=24h\|7d\|30d\|all` or `from`/`to`) |
 | GET | `/api/analytics/top` | Most viewed articles in a range |
 | DELETE | `/api/analytics/article/:id` | Reset an article's statistics |
+| GET / POST | `/api/users` | Editor: list/search users or create a user |
+| PUT / DELETE | `/api/users/:id` | Editor: update or delete a user (only if no authored articles) |
 | GET | `/api/articles/:id/comments` | Comments of an article (newest first, paginated, search) |
 | POST | `/api/articles/:id/comments` | Add a comment (max 3 per minute per device) |
 | PUT / DELETE | `/api/comments/:id` | Editor: edit / delete a comment |

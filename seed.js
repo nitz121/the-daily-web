@@ -194,7 +194,9 @@ const seed = async () => {
     for (let i = 1; i <= 510; i++) {
         const cat = categories[i % categories.length];
         const topicList = sampleTopics[cat];
-        const baseTitle = topicList[i % topicList.length];
+        // `i % categories.length` already selects the category. Advance the topic
+        // only after one full category cycle, otherwise every category gets one title.
+        const baseTitle = topicList[Math.floor(i / categories.length) % topicList.length];
         const title = i <= topicList.length ? baseTitle : `${baseTitle} (Part ${Math.floor(i / topicList.length) + 1})`;
 
         const author = reporters[i % reporters.length];
