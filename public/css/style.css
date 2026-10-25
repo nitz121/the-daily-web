@@ -1009,12 +1009,14 @@ body {
         grid-template-columns: 1fr;
     }
     
+    /* Sidebar above the feed: nothing should sit below an infinitely growing list -
+       infinite scroll needs the end of the feed at the bottom of the page */
     .feed-sidebar {
+        order: -1;
         position: static;
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
-        margin-top: 20px;
     }
 }
 
