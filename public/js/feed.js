@@ -190,6 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (!hasMore) {
                         endOfFeedMessage.style.display = 'block';
+                    } else {
+                        // The end of the feed may still be on screen (e.g. after a fast scroll) - check again
+                        requestAnimationFrame(loadMoreIfNeeded);
                     }
                 }
             } else {
@@ -207,36 +210,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ── Infinite Scroll Observer ────────────────────────────────────────────
-    function setupInfiniteScroll() {
-        if (!('IntersectionObserver' in window)) {
-            // Fallback for older browsers: scroll event listener
-            window.addEventListener('scroll', () => {
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-                    if (!isLoading && hasMore) {
-                        currentPage++;
-                        fetchArticles(false);
-                    }
-                }
-            });
-            return;
+    // ── Infinite Scroll ─────────────────────────────────────────────────────
+    const PREFETCH_PX = 300; // start loading before the user reaches the very bottom
+
+    // Load the next page when the end of the feed (the sentinel) is near the bottom of the
+    // screen - or already above it. On phones the sidebar and footer sit below the feed, so a
+    // fast scroll can pass the sentinel without it ever being on screen.
+    function loadMoreIfNeeded() {
+        if (isLoading || !hasMore || !scrollSentinel) return;
+        if (scrollSentinel.getBoundingClientRect().top < window.innerHeight + PREFETCH_PX) {
+            currentPage++;
+            fetchArticles(false);
         }
+    }
 
-        const observer = new IntersectionObserver((entries) => {
-            const entry = entries[0];
-            if (entry.isIntersecting && !isLoading && hasMore) {
-                currentPage++;
-                fetchArticles(false);
-            }
-        }, {
-            root: null,
-            rootMargin: '300px', // Pre-fetch before user reaches the very bottom
-            threshold: 0.1
-        });
-
-        if (scrollSentinel) {
+    function setupInfiniteScroll() {
+        // The observer reacts when the sentinel comes into view...
+        if ('IntersectionObserver' in window && scrollSentinel) {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) loadMoreIfNeeded();
+            }, {
+                root: null,
+                rootMargin: `${PREFETCH_PX}px`,
+                threshold: 0.1
+            });
             observer.observe(scrollSentinel);
         }
+
+        // ...and the scroll check also catches a sentinel that was scrolled past
+        // (the observer only fires when it enters or leaves the screen). At most one check per frame.
+        let scrollCheckPending = false;
+        window.addEventListener('scroll', () => {
+            if (scrollCheckPending) return;
+            scrollCheckPending = true;
+            requestAnimationFrame(() => {
+                scrollCheckPending = false;
+                loadMoreIfNeeded();
+            });
+        }, { passive: true });
     }
 
     // ── Search & Filter Handlers ────────────────────────────────────────────
